@@ -1,4 +1,4 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script><script>window.APP_CONFIG={supabaseUrl:"https://ihcomdxdbfgagmwooait.supabase.co",supabaseAnonKey:"sb_publishable_CeF1hU5lqic9so65PNeN3Q_oi5evrli"};</script></head><body><title>사무비품 상태판정</title>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script><script>window.APP_CONFIG={supabaseUrl:"https://ihcomdxdbfgagmwooait.supabase.co",supabaseAnonKey:"sb_publishable_CeF1hU5lqic9so65PNeN3Q_oi5evrli"};</script></head><body><title>효율적 OA사무비품 재산관리</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
@@ -44,6 +44,7 @@ h1{font-size:22px} h2{font-size:18px} h3{font-size:15px}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
 .grid2>*{min-width:0}
+.admstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}.admstats div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;gap:2px}.admstats b{font-size:26px}.admstats span{font-size:12px;color:var(--muted)}
 .notice{font-size:13px;padding:10px 12px;border-radius:6px;background:var(--sunk);color:var(--muted)}
 .notice.warn{background:var(--gC-bg);color:var(--fg)}
 .notice.err{background:var(--gD-bg);color:var(--fg)}
@@ -357,6 +358,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
     <a href="#inspect">촬영·판정</a>
     <a href="#vendors">정비업체</a>
     <a href="#criteria">판정기준</a>
+    <a href="#admin" id="navAdmin" hidden>승인관리</a>
   </nav>
 </div></header>
 
@@ -366,7 +368,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
 <section id="v-home" data-view hidden>
   <div class="hero">
     <div class="eyebrow">사무비품 재산관리 · 질정분류 · 폐품판정</div>
-    <h1 class="htitle">AI를 적용하여 사무비품 재산관리를<br>편하게 해 보끄나!!</h1>
+    <h1 class="htitle">효율적 OA사무비품<br>재산관리</h1>
     <p class="hsub">휴대폰으로 사진 한 장 찍으면 A~D급 질정분류, 요정비 부위, 폐품 여부, 정비업체와 단가까지 한 번에 나옵니다.</p>
     <div class="row"><button class="primary" onclick="location.hash='inspect'">사진 찍어서 판정하기</button><button onclick="location.hash='dashboard'">보유 비품 현황 보기</button></div>
   </div>
@@ -527,6 +529,15 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
   </div>
 </section>
 
+<section id="v-admin" data-view hidden>
+  <h1>승인 관리 <span class="tag" id="admRole"></span></h1>
+  <div class="muted" style="font-size:14px">부대마다 <b>부대관리자 1명</b>이 같은 부대 가입자와 비밀번호 재설정 요청을 승인합니다. 총괄관리자는 모든 부대를 보고 부대관리자를 지정합니다.</div>
+  <div class="admstats" id="admStats"></div>
+  <div class="panel" style="margin-top:14px;display:grid;gap:10px"><h2>가입 승인 대기</h2><div class="tablewrap" id="admPending"></div></div>
+  <div class="panel" style="margin-top:14px;display:grid;gap:10px"><h2>비밀번호 재설정 요청</h2><div class="muted" style="font-size:13px">승인하면 그 사람 이메일로 재설정 링크가 갑니다. 본인 확인(전화 등) 후 승인하세요.</div><div class="tablewrap" id="admReset"></div></div>
+  <div class="panel" style="margin-top:14px;display:grid;gap:10px"><h2 id="admAllTitle">부대원 명단</h2><div class="tablewrap" id="admAll"></div></div>
+</section>
+
 </main></div>
 
 <div id="authGate" class="authgate" hidden>
@@ -551,7 +562,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
   <section class="lp-hero"><div class="lp-w lp-hgrid">
     <div class="lp-copy">
       <div class="lp-eyebrow">군 부대 사무비품 재산관리 서비스</div>
-      <h1 class="lp-title">AI를 적용하여<br>사무비품 재산관리를<br><span>편하게 해 보끄나!!</span></h1>
+      <h1 class="lp-title">효율적<br>OA사무비품<br><span>재산관리</span></h1>
       <p class="lp-sub">휴대폰으로 사진 한 장 찍으면 A~D급 질정분류, 요정비 부위, 폐품 여부, 정비업체와 단가까지 한 번에 나옵니다.</p>
       <div class="lp-stats">
         <div><b>7</b><span>관리 품목</span></div><div><b>A~D</b><span>질정 4단계</span></div><div><b>자동</b><span>폐품판정</span></div><div><b>서울·경기</b><span>정비업체 연결</span></div>
@@ -562,7 +573,22 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
       <h2>부대 담당자 계정으로 시작하세요</h2>
       <label class="f">이메일<input id="authEmail" type="email" autocomplete="username" required></label>
       <label class="f">비밀번호<input id="authPw" type="password" autocomplete="current-password" minlength="6" required></label>
-      <div class="row"><button class="primary" type="submit">로그인</button><button type="button" class="ghost" id="authSignup">처음이면 가입</button><button type="button" class="ghost" id="authForgot">비밀번호 찾기</button></div>
+      <div id="signupBox" hidden style="display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px">
+        <b>가입 정보 <span class="muted" style="font-weight:400;font-size:12px">· 소속 부대관리자가 승인하면 쓸 수 있습니다</span></b>
+        <label class="f">이름(계급 포함)<input id="suName" autocomplete="name" placeholder="예) 대위 홍길동"></label>
+        <label class="f">소속 부대<input id="suUnit" list="unitList" placeholder="예) 제○○사단 군수처"></label>
+        <label class="f">연락처<input id="suPhone" type="tel" autocomplete="tel" placeholder="예) 010-0000-0000"></label>
+      </div>
+      <datalist id="unitList"></datalist>
+      <div class="row"><button class="primary" type="submit">로그인</button><button type="button" class="ghost" id="authSignup">처음이면 가입</button></div>
+      <div class="row" style="font-size:13px"><button type="button" class="small ghost" id="authFindId">아이디 찾기</button><button type="button" class="small ghost" id="authForgot">비밀번호 찾기</button></div>
+      <div id="findIdBox" hidden style="display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px">
+        <b>아이디(이메일) 찾기</b>
+        <label class="f">이름(가입할 때 쓴 그대로)<input id="fiName"></label>
+        <label class="f">소속 부대<input id="fiUnit" list="unitList"></label>
+        <div class="row"><button type="button" class="primary" id="fiGo">찾기</button></div>
+        <div id="fiOut" style="font-size:14px"></div>
+      </div>
       <div id="resetBox" hidden style="display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px">
         <b>새 비밀번호 설정</b>
         <label class="f">새 비밀번호 (6자 이상)<input id="newPw" type="password" autocomplete="new-password" minlength="6"></label>
@@ -570,7 +596,8 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
         <div class="row"><button type="button" class="primary" id="newPwSave">비밀번호 바꾸기</button></div>
       </div>
       <div id="authMsg" class="muted" style="font-size:13px" aria-live="polite"></div>
-      <div class="muted" style="font-size:12px">처음 쓰시면 이메일과 비밀번호(6자 이상)를 넣고 "처음이면 가입"을 누르세요.</div>
+      <div class="muted" style="font-size:12px">처음 쓰시면 "처음이면 가입"을 누르고 이름·소속 부대를 적어 가입하세요. 소속 <b>부대관리자</b>가 승인하면 쓸 수 있습니다. 비밀번호 재설정 메일도 부대관리자가 승인해야 발송됩니다.</div>
+      <div id="pendingBox" hidden class="notice" style="display:grid;gap:8px"><b id="pendTitle">승인 대기 중</b><span id="pendText"></span><div class="row"><button type="button" class="small ghost" id="pendRe">다시 확인</button><button type="button" class="small ghost" id="pendOut">로그아웃</button></div></div>
     </form>
   </div></section>
 
@@ -728,7 +755,7 @@ let refs={}; // 기준 사진 (품목 대표사진은 "cat|품목"): key "품목
 function refPhoto(cat,g){ return refs[cat+"|"+g]||null; }
 
 /* ---------- routing ---------- */
-const VIEWS=["home","dashboard","inspect","vendors","criteria"];
+const VIEWS=["home","dashboard","inspect","vendors","criteria","admin"];
 function route(){
   const h=(location.hash||"#home").slice(1); const v=VIEWS.includes(h)?h:"home";
   document.querySelectorAll("[data-view]").forEach(s=>s.hidden = s.id!=="v-"+v);
@@ -1336,10 +1363,23 @@ async function loadLandingPhoto(){
     showStockHero();
   }catch(e){ showStockHero(); }
 }
+let myProfile=null;
 function ensureLogin(){
   sbClient = sbClient || window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
   return new Promise(async resolve=>{
-    const done=u=>{ $("authGate").hidden=true; $("who").hidden=false; $("whoMail").textContent=u.email||""; resolve(u); };
+    const enter=u=>{ $("authGate").hidden=true; $("pendingBox").hidden=true; $("who").hidden=false; $("whoMail").textContent=(myProfile?.name?myProfile.name+" · ":"")+(u.email||""); resolve(u); };
+    const done=async u=>{
+      const {data:pr}=await sbClient.from("profiles").select("*").eq("id",u.id).maybeSingle();
+      myProfile=pr||null;
+      if(pr && pr.status==="approved"){ $("navAdmin").hidden=!(pr.role==="unit_admin"||pr.role==="super"); enter(u); return; }
+      $("authGate").hidden=false; loadLandingPhoto(); $("pendingBox").hidden=false;
+      $("pendTitle").textContent= pr&&pr.status==="rejected" ? "가입이 반려되었습니다" : "승인 대기 중";
+      $("pendText").textContent= pr&&pr.status==="rejected" ? "소속 부대관리자에게 문의하세요." :
+        `${pr?.unit||"소속 부대"} 부대관리자가 승인하면 쓸 수 있습니다. 승인 뒤 "다시 확인"을 누르세요.`;
+      setTimeout(()=>$("pendingBox").scrollIntoView({behavior:"smooth",block:"center"}),300);
+      $("pendRe").onclick=()=>done(u);
+      $("pendOut").onclick=async()=>{ await sbClient.auth.signOut(); location.reload(); };
+    };
     const recovery=/type=recovery/.test(location.hash);
     const {data}=await sbClient.auth.getSession();
     if(recovery && data.session){
@@ -1359,24 +1399,83 @@ function ensureLogin(){
     $("authGate").hidden=false; loadLandingPhoto();
     document.querySelectorAll('#authGate a[href="#lpLogin"]').forEach(a=>a.onclick=e=>{e.preventDefault(); $("authForm").scrollIntoView({behavior:"smooth",block:"center"}); setTimeout(()=>$("authEmail").focus(),400);});
     const msg=t=>$("authMsg").textContent=t;
+    sbClient.rpc("list_units").then(({data})=>{ $("unitList").innerHTML=(data||[]).map(u=>`<option value="${esc(u)}">`).join(""); });
     const go=async mode=>{
       const email=$("authEmail").value.trim(), password=$("authPw").value;
+      if(mode==="up" && $("signupBox").hidden){ $("signupBox").hidden=false; $("findIdBox").hidden=true; msg("이름·소속 부대·연락처를 적고 \"처음이면 가입\"을 한 번 더 누르세요."); $("suName").focus(); return; }
       if(!email||password.length<6){ msg("이메일과 6자 이상 비밀번호를 입력하세요."); return; }
+      let meta=null;
+      if(mode==="up"){ meta={name:$("suName").value.trim(),unit:$("suUnit").value.trim(),phone:$("suPhone").value.trim()};
+        if(!meta.name||!meta.unit){ msg("이름과 소속 부대를 입력하세요."); return; } }
       msg(mode==="up"?"가입하는 중…":"로그인하는 중…");
-      const r= mode==="up"? await sbClient.auth.signUp({email,password}) : await sbClient.auth.signInWithPassword({email,password});
+      const r= mode==="up"? await sbClient.auth.signUp({email,password,options:{data:meta}}) : await sbClient.auth.signInWithPassword({email,password});
       if(r.error){ msg(mode==="up"?"가입하지 못했습니다: "+r.error.message:"이메일 또는 비밀번호가 맞지 않습니다."); return; }
       if(!r.data.session){ msg("가입 확인 메일을 보냈습니다. 메일의 링크를 누른 뒤 로그인하세요."); return; }
-      done(r.data.user);
+      msg(""); done(r.data.user);
     };
     $("authForm").onsubmit=e=>{e.preventDefault();go("in");};
     $("authSignup").onclick=()=>go("up");
+    $("authFindId").onclick=()=>{ $("findIdBox").hidden=!$("findIdBox").hidden; $("signupBox").hidden=true; if(!$("findIdBox").hidden) $("fiName").focus(); };
+    $("fiGo").onclick=async()=>{ const n=$("fiName").value.trim(), u=$("fiUnit").value.trim();
+      if(!n||!u){ $("fiOut").textContent="이름과 소속 부대를 모두 입력하세요."; return; }
+      const {data,error}=await sbClient.rpc("find_id",{p_name:n,p_unit:u});
+      if(error){ $("fiOut").textContent="찾지 못했습니다: "+error.message; return; }
+      $("fiOut").innerHTML = data&&data.length ? "가입한 아이디: "+data.map(x=>`<b>${esc(x)}</b>`).join(", ")+'<div class="muted" style="font-size:12px">가운데 글자는 가려서 보여드립니다. 기억나지 않으면 부대관리자에게 문의하세요.</div>'
+        : "일치하는 계정이 없습니다. 가입할 때 쓴 이름·부대명을 그대로 입력하세요."; };
     $("authForgot").onclick=async()=>{ const email=$("authEmail").value.trim();
-      if(!email){ msg("가입할 때 쓴 이메일을 먼저 입력하고 다시 누르세요."); return; }
-      msg("메일을 보내는 중…");
-      const r=await sbClient.auth.resetPasswordForEmail(email,{redirectTo:location.origin+"/"});
-      msg(r.error?"메일을 보내지 못했습니다: "+r.error.message:"비밀번호 재설정 메일을 보냈습니다. 메일의 링크를 누르면 새 비밀번호를 정할 수 있습니다."); };
+      if(!email){ msg("가입할 때 쓴 이메일을 위 칸에 먼저 입력하고 다시 누르세요. 이메일이 기억나지 않으면 \"아이디 찾기\"를 쓰세요."); $("authEmail").focus(); return; }
+      msg("요청하는 중…");
+      const r=await sbClient.rpc("request_reset",{p_email:email});
+      msg(r.error?"요청하지 못했습니다: "+r.error.message:"비밀번호 재설정을 요청했습니다. 소속 부대관리자가 승인하면 이 이메일로 재설정 링크가 갑니다."); };
   });
 }
+/* ---------- 승인 관리 (부대관리자 · 총괄관리자) ---------- */
+const ROLE_KO={member:"부대원",unit_admin:"부대관리자",super:"총괄관리자"}, ST_KO={pending:"대기",approved:"승인",rejected:"반려",sent:"메일 보냄"};
+async function renderAdmin(){
+  if(!SUPA||!myProfile||!(myProfile.role==="unit_admin"||myProfile.role==="super")) return;
+  const sup=myProfile.role==="super";
+  $("admRole").textContent=(sup?"총괄관리자":"부대관리자 · "+(myProfile.unit||""));
+  $("admAllTitle").textContent=sup?"전체 가입자 · 부대관리자 지정":"우리 부대 명단";
+  const [{data:ps},{data:rs}]=await Promise.all([
+    sbClient.from("profiles").select("*").order("created_at",{ascending:false}),
+    sbClient.from("reset_requests").select("*").order("created_at",{ascending:false}).limit(100)]);
+  const P=ps||[], R=rs||[], pend=P.filter(x=>x.status==="pending"), rpend=R.filter(x=>x.status==="pending");
+  const units=[...new Set(P.map(x=>x.unit).filter(Boolean))];
+  $("admStats").innerHTML=`<div><b>${pend.length}</b><span>가입 승인 대기</span></div><div><b>${rpend.length}</b><span>비밀번호 재설정 요청</span></div><div><b>${P.filter(x=>x.status==="approved").length}</b><span>승인된 사용자</span></div><div><b>${units.length}</b><span>부대 수</span></div>`;
+  const who=x=>`<b>${esc(x.name||"(이름 없음)")}</b><div class="muted" style="font-size:12px">${esc(x.email||"")}</div>`;
+  const dt=t=>t?new Date(t).toLocaleString("ko-KR",{dateStyle:"short",timeStyle:"short"}):"";
+  const tbl=(head,rows,empty)=>rows.length?`<table style="min-width:560px"><thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table>`:`<div class="muted" style="font-size:14px">${empty}</div>`;
+  $("admPending").innerHTML=tbl(["이름·이메일","소속 부대","연락처","신청일",""],pend.map(x=>`<tr><td>${who(x)}</td><td>${esc(x.unit||"-")}</td><td>${esc(x.phone||"-")}</td><td>${dt(x.created_at)}</td><td class="row" style="gap:6px"><button class="small primary" data-ok="${x.id}">승인</button><button class="small ghost" data-no="${x.id}">반려</button></td></tr>`),"승인을 기다리는 가입자가 없습니다.");
+  $("admReset").innerHTML=tbl(["이름·이메일","소속 부대","요청일","상태",""],R.map(x=>`<tr><td>${who(x)}</td><td>${esc(x.unit||"-")}</td><td>${dt(x.created_at)}</td><td>${ST_KO[x.status]||x.status}</td><td class="row" style="gap:6px">${x.status==="pending"?`<button class="small primary" data-rs="${x.id}">승인·메일 발송</button><button class="small ghost" data-rx="${x.id}">반려</button>`:""}</td></tr>`),"비밀번호 재설정 요청이 없습니다.");
+  const adminOf=u=>P.find(x=>x.unit===u&&x.role==="unit_admin");
+  $("admAll").innerHTML=tbl(["이름·이메일","소속 부대","역할","상태",""],P.map(x=>{
+    let act="";
+    if(sup && x.role!=="super"){
+      act+= x.role==="unit_admin" ? `<button class="small ghost" data-unadm="${x.id}">관리자 해제</button>` : (x.unit&&x.status==="approved"?`<button class="small" data-adm="${x.id}">${adminOf(x.unit)?"관리자 교체":"부대관리자 지정"}</button>`:"");
+    }
+    if(sup) act+=`<button class="small ghost" data-unit="${x.id}">부대 변경</button>`;
+    if(x.status==="approved" && x.role==="member" && x.id!==myProfile.id) act+=`<button class="small ghost" data-no="${x.id}">사용 중지</button>`;
+    if(x.status==="rejected") act+=`<button class="small ghost" data-ok="${x.id}">다시 승인</button>`;
+    return `<tr><td>${who(x)}</td><td>${esc(x.unit||"미지정")}</td><td>${ROLE_KO[x.role]||x.role}</td><td>${ST_KO[x.status]||x.status}</td><td class="row" style="gap:6px">${act}</td></tr>`;}),"가입자가 없습니다.");
+  const upd=async(id,d,ok)=>{ const {error}=await sbClient.from("profiles").update(d).eq("id",id); toast(error?"처리하지 못했습니다: "+error.message:ok); renderAdmin(); };
+  const V=$("v-admin");
+  V.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>upd(b.dataset.ok,{status:"approved"},"승인했습니다"));
+  V.querySelectorAll("[data-no]").forEach(b=>b.onclick=()=>upd(b.dataset.no,{status:"rejected"},"반려했습니다"));
+  V.querySelectorAll("[data-unadm]").forEach(b=>b.onclick=()=>upd(b.dataset.unadm,{role:"member"},"부대관리자를 해제했습니다"));
+  V.querySelectorAll("[data-adm]").forEach(b=>b.onclick=async()=>{ const x=P.find(y=>y.id===b.dataset.adm), old=adminOf(x.unit);
+    if(old){ const {error}=await sbClient.from("profiles").update({role:"member"}).eq("id",old.id); if(error){toast("처리하지 못했습니다: "+error.message);return;} }
+    upd(x.id,{role:"unit_admin"},`${x.name||x.email}님을 ${x.unit} 부대관리자로 지정했습니다`); });
+  V.querySelectorAll("[data-unit]").forEach(b=>b.onclick=()=>{ const x=P.find(y=>y.id===b.dataset.unit), td=b.closest("tr").children[1];
+    td.innerHTML=`<input list="unitList" value="${esc(x.unit||"")}" style="width:150px"> <button class="small primary">저장</button>`;
+    td.querySelector("button").onclick=()=>{ const v=td.querySelector("input").value.trim(); if(!v) return;
+      upd(x.id,{unit:v,...(x.role==="unit_admin"&&v!==x.unit?{role:"member"}:{})},"부대를 바꿨습니다"); }; });
+  V.querySelectorAll("[data-rs]").forEach(b=>b.onclick=async()=>{ const x=R.find(y=>y.id===b.dataset.rs); b.disabled=true; b.textContent="보내는 중…";
+    const r=await sbClient.auth.resetPasswordForEmail(x.email,{redirectTo:location.origin+"/"});
+    if(r.error){ toast("메일을 보내지 못했습니다: "+r.error.message); b.disabled=false; b.textContent="승인·메일 발송"; return; }
+    await sbClient.from("reset_requests").update({status:"sent",handled_by:me}).eq("id",x.id); toast(x.email+"로 재설정 메일을 보냈습니다"); renderAdmin(); });
+  V.querySelectorAll("[data-rx]").forEach(b=>b.onclick=async()=>{ await sbClient.from("reset_requests").update({status:"rejected",handled_by:me}).eq("id",b.dataset.rx); toast("반려했습니다"); renderAdmin(); });
+}
+addEventListener("hashchange",()=>{ if(location.hash==="#admin") renderAdmin(); });
 if(SUPA){ $("logoutBtn").onclick=async()=>{ await sbClient.auth.signOut(); location.reload(); }; }
 
 /* ---------- 로컬 미리보기 모드 (claude.ai 밖에서 파일로 열 때) ---------- */
@@ -1434,7 +1533,7 @@ if(LOCAL && !SUPA){ const f=document.createElement("div"); f.className="wrap"; f
 renderDashboard(); renderVendors(); renderHome(); route();
 (async()=>{
   const note=$("dbNote");
-  if(SUPA){ note.hidden=true; const u=await ensureLogin(); me=u.id; db=SupaDB; }
+  if(SUPA){ note.hidden=true; const u=await ensureLogin(); me=u.id; db=SupaDB; if(location.hash==="#admin") renderAdmin(); }
   else if(LOCAL){ db=LocalDB; } else { try{ db=await claude.use("db"); }catch(e){ db=null; } }
   if(!db){ note.hidden=false; note.textContent="저장소에 연결할 수 없습니다. claude.ai에 로그인한 상태로 열면 비품 목록이 보입니다."; return; }
   if(!LOCAL && !SUPA) try{ const u=await claude.use("user"); me=u?await u.id():null; }catch(e){}
