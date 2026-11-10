@@ -143,6 +143,20 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono
 .compare img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;background:var(--sunk)}
 .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
 .vgrid>*{min-width:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.g2bband{display:flex;align-items:center;gap:14px;margin-top:12px;padding:14px 16px;border-radius:10px;background:linear-gradient(90deg,#123a5c,#1d5a86);color:#fff;text-decoration:none}
+.g2bband b{display:block;font-size:16px}.g2bband small{display:block;opacity:.85;font-size:12.5px}.g2bband .go{margin-left:auto;font-weight:700;white-space:nowrap}
+.g2bic{flex:0 0 auto;width:44px;height:44px;border-radius:10px;background:#fff;color:#123a5c;display:grid;place-items:center;font-weight:800;font-size:13px}
+.pcard{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:16px;display:grid;gap:10px;align-content:start}
+.pcard .ph{display:flex;gap:12px;align-items:center}
+.pcard .plogo{flex:0 0 auto;width:46px;height:46px;border-radius:10px;display:grid;place-items:center;font-weight:800;color:#fff;font-size:17px}
+.pcard h3{font-size:17px;margin:0}.pcard h3 a{color:inherit;text-decoration:none}.pcard h3 a:hover{text-decoration:underline}
+.ptype{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;margin-right:4px;display:inline-block}
+.ptype.조달{background:#dcebf7;color:#123a5c}.ptype.기업{background:#e7f0e1;color:#2f5a1f}.ptype.판매{background:#f6ead8;color:#7a4a10}
+.pitems{display:flex;flex-wrap:wrap;gap:6px}.pitems a{font-size:12.5px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);text-decoration:none;color:inherit;background:var(--sunk)}
+.pitems a:hover{border-color:var(--accent)}.pitems a.hit{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.pbtns{display:flex;gap:8px;flex-wrap:wrap}.pbtns a{font-size:13px;padding:7px 12px;border-radius:8px;text-decoration:none;font-weight:600}
+.pbtns a.main{background:var(--accent);color:var(--bg)}.pbtns a.sub{border:1px solid var(--line);color:inherit}
 .vcard{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:16px;display:grid;gap:10px;align-content:start}
 .vcard h3{font-size:17px}
 .vinfo{display:grid;grid-template-columns:72px 1fr;gap:4px 10px;font-size:13.5px}
@@ -369,6 +383,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
     <a href="#inspect">촬영·판정</a>
     <a href="#vendors">정비업체</a>
     <a href="#criteria">판정기준</a>
+    <a href="#procure">조달품목</a>
     <a href="#admin" id="navAdmin" hidden>승인관리</a>
   </nav>
 </div></header>
@@ -538,6 +553,36 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
     <div class="label" style="margin-top:6px">품목별 내용연수 초기값 (참고용)</div>
     <div class="tablewrap"><table style="min-width:0" id="lifeTbl"></table></div>
   </div>
+</section>
+
+<section id="v-procure" data-view hidden>
+  <h1>조달품목 <span class="tag">소요판단 · 구매 참고</span></h1>
+  <div class="muted" style="font-size:14px">공공기관·기업에 사무비품을 납품하거나 판매하는 업체입니다. 품목을 고르면 그 품목을 다루는 업체만 보이고, 업체 이름이나 품목 칩을 누르면 업체 홈페이지와 제품 검색으로 바로 이동합니다.</div>
+  <a class="g2bband" href="https://shop.g2b.go.kr" target="_blank" rel="noopener">
+    <span class="g2bic">조달</span>
+    <span><b>조달청 나라장터 종합쇼핑몰</b><small>공공기관 구매는 여기서 계약단가·규격·납품업체를 확인하고 주문합니다</small></span>
+    <span class="go">바로가기 ↗</span>
+  </a>
+  <div class="infog" id="procInfo" style="margin:14px 0"></div>
+  <div class="filters" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <div class="chips" id="procCats"></div>
+    <select id="procType"><option value="">납품·판매 전체</option><option value="조달">공공조달 납품</option><option value="기업">기업 납품(B2B)</option><option value="판매">온라인·매장 판매</option></select>
+    <input id="procQ" placeholder="업체·제품 검색" style="width:160px">
+    <button class="primary small" id="procAddBtn">+ 업체 추가</button>
+  </div>
+  <div class="panel" id="procForm" hidden style="margin-bottom:14px;display:grid;gap:10px">
+    <h2>조달·판매 업체 추가</h2>
+    <div class="form">
+      <label class="f">업체명<input id="pfName"></label>
+      <label class="f">홈페이지 주소<input id="pfUrl" placeholder="https://"></label>
+      <label class="f">납품·판매 형태<select id="pfType"><option>조달</option><option>기업</option><option>판매</option></select></label>
+      <label class="f">특징(한 줄)<input id="pfDesc"></label>
+    </div>
+    <div class="label">취급 품목</div><div class="chips" id="pfCats"></div>
+    <div class="row"><button class="primary" id="pfSave">저장</button><button class="ghost" id="pfCancel">취소</button><span id="pfMsg" class="muted" style="font-size:13px"></span></div>
+  </div>
+  <div id="procList" class="vgrid"></div>
+  <div class="muted" style="font-size:12.5px;margin-top:12px">업체 정보는 각 업체 홈페이지 공개 내용 기준이며, 조달 계약 여부·단가는 시기마다 바뀌므로 구매 전 나라장터 종합쇼핑몰에서 다시 확인하세요.</div>
 </section>
 
 <section id="v-admin" data-view hidden>
@@ -808,7 +853,7 @@ let refs={}; // 기준 사진 (품목 대표사진은 "cat|품목"): key "품목
 function refPhoto(cat,g){ return refs[cat+"|"+g]||null; }
 
 /* ---------- routing ---------- */
-const VIEWS=["home","dashboard","inspect","vendors","criteria","admin"];
+const VIEWS=["home","dashboard","inspect","vendors","criteria","procure","admin"];
 function route(){
   const h=(location.hash||"#home").slice(1); const v=VIEWS.includes(h)?h:"home";
   document.querySelectorAll("[data-view]").forEach(s=>s.hidden = s.id!=="v-"+v);
@@ -1245,7 +1290,7 @@ function openProductForm(cat){
     catch(e){ $("np-msg").textContent="저장하지 못했습니다. 권한을 확인하세요."; }};
   $("dlg").showModal();
 }
-function catsChanged(){ fillCatOptions(); fillVendorCats(); fillLife(); renderCriteria(); renderVendors(); renderDashboard(); }
+function catsChanged(){ fillCatOptions(); fillVendorCats(); fillLife(); renderCriteria(); renderVendors(); renderDashboard(); renderProcure(); }
 
 /* ---------- data ---------- */
 /* ---------- 페이지별 인포그래픽 ---------- */
@@ -1556,6 +1601,62 @@ function ensureLogin(){
       msg("비밀번호를 바꿨습니다. 새 비밀번호로 로그인하세요."); };
   });
 }
+/* ---------- 조달품목 (납품·판매 업체) ---------- */
+const PROC_SEED=[
+ {id:"s1",name:"퍼시스",url:"https://www.fursys.com",type:["조달","기업"],color:"#1f3b57",cats:["책상","의자","옷장","서류함","티테이블","파티션","책장"],desc:"국내 대표 사무환경 전문기업. 공공기관·기업 사무실 전체 가구를 설계부터 납품까지.",kw:"퍼시스"},
+ {id:"s2",name:"코아스",url:"https://www.koas.co.kr",type:["조달","기업"],color:"#7a1f2b",cats:["책상","의자","서류함","티테이블","파티션","책장"],desc:"공공기관·기업 사무가구 납품. 공간 컨설팅과 시스템 가구, 의자 라인업.",kw:"코아스 사무가구"},
+ {id:"s3",name:"현대리바트",url:"https://www.hyundailivart.co.kr",type:["기업","판매"],color:"#2d2d2d",cats:["책상","의자","옷장","서류함","티테이블","파티션","책장"],desc:"현대백화점그룹 가구 계열사. 오피스 가구(기업 납품)와 일반 판매 병행.",kw:"리바트 오피스"},
+ {id:"s4",name:"오넥트(ONECT)",url:"https://www.onect.kr",type:["조달"],color:"#0f6e6e",cats:["책상","의자","서류함","티테이블","파티션","책장"],desc:"공공기관 사무용 가구 전문, 조달청 우수제품 표방(홈페이지 기준).",kw:"오넥트 사무가구"},
+ {id:"s5",name:"현대사무용가구",url:"https://www.gaguhd.co.kr",type:["기업","판매"],color:"#3c4a8a",cats:["책상","의자","옷장","서류함","티테이블","파티션","책장"],desc:"사무용 책상·의자·파티션 자체생산, 소비자 직거래 판매.",kw:"현대사무용가구"},
+ {id:"s6",name:"데스커(DESKER)",url:"https://www.desker.co.kr",type:["기업","판매"],color:"#4a4a4a",cats:["책상","의자","서류함","책장","파티션"],desc:"업무용 책상·모션데스크 중심 브랜드(퍼시스그룹). 스타트업·기업 오피스 납품.",kw:"데스커"},
+ {id:"s7",name:"시디즈(SIDIZ)",url:"https://www.sidiz.com",type:["기업","판매"],color:"#c2410c",cats:["의자"],desc:"의자 전문 브랜드(퍼시스그룹). 사무용·회의용·중역용 의자.",kw:"시디즈 의자"},
+ {id:"s8",name:"일룸(iloom)",url:"https://www.iloom.com",type:["판매"],color:"#6b8e23",cats:["책상","의자","책장","서류함"],desc:"생활가구 브랜드(퍼시스그룹). 소형 사무실·홈오피스용 책상·책장.",kw:"일룸 책상"},
+ {id:"s9",name:"한샘",url:"https://www.hanssem.com",type:["기업","판매"],color:"#b91c1c",cats:["책상","의자","옷장","서류함","책장"],desc:"종합 가구·인테리어 기업. 오피스 가구 사업과 온라인몰 판매.",kw:"한샘 사무용 가구"},
+ {id:"s10",name:"듀오백(DUOBACK)",url:"https://www.duoback.co.kr",type:["기업","판매"],color:"#1e40af",cats:["의자","책상"],desc:"등받이 2분할 의자로 알려진 의자 전문 브랜드.",kw:"듀오백 사무용 의자"},
+ {id:"s11",name:"이케아 비즈니스",url:"https://www.ikea.com/kr/ko/",type:["기업","판매"],color:"#0058a3",cats:["책상","의자","옷장","서류함","티테이블","책장"],desc:"저가형 사무가구·수납가구. 매장·온라인 판매, 기업 구매 상담.",kw:"이케아 사무용"},
+ {id:"s12",name:"코스트코 (사무가구)",url:"https://www.costco.co.kr/FurnitureBeddingHome/Office-Furniture/c/cos_11.9",type:["판매"],color:"#005daa",cats:["책상","의자","서류함"],desc:"회원제 창고형 매장의 사무가구 코너. 의자·책상 묶음 구매에 유리.",kw:"코스트코 사무용 의자"}
+];
+let procUser=[], procCat="", procDocs={};
+const procAll=()=>[...PROC_SEED,...procUser];
+const naver=q=>"https://search.naver.com/search.naver?query="+encodeURIComponent(q);
+const g2bSearch=q=>"https://shop.g2b.go.kr";
+function renderProcure(){
+  if(!$("procList")) return;
+  const cs=catNames(), all=procAll(), t=$("procType").value, q=$("procQ").value.trim();
+  $("procCats").innerHTML=[["","전체"],...cs.map(c=>[c,c])].map(([v,l])=>`<button class="chip" data-pc="${esc(v)}" aria-pressed="${procCat===v}">${esc(l)} <span>${v?all.filter(x=>(x.cats||[]).includes(v)).length:all.length}</span></button>`).join("");
+  $("procCats").querySelectorAll("[data-pc]").forEach(b=>b.onclick=()=>{procCat=b.dataset.pc;renderProcure();});
+  const list=all.filter(x=>(!procCat||(x.cats||[]).includes(procCat))&&(!t||(x.type||[]).includes(t))&&(!q||(x.name+" "+x.desc+" "+(x.cats||[]).join(" ")).includes(q)));
+  $("procInfo").innerHTML=`<div class="ig1 vsum"><div><div class="big A">${all.length}</div><div class="label">등록 업체</div></div>
+      <div><div class="big B">${all.filter(x=>(x.type||[]).includes("조달")).length}</div><div class="label">공공조달 납품</div></div>
+      <div><div class="big C">${cs.length}</div><div class="label">관리 품목</div></div></div>
+    <div class="ig2" style="grid-column:span 2"><div class="label" style="margin-bottom:8px">업체별 취급 품목 (품목을 누르면 그 업체의 제품 검색)</div><div class="tablewrap"><table class="mx"><tr><th></th>${cs.map(c=>`<th>${esc(c)}</th>`).join("")}</tr>
+      ${all.map(v=>`<tr><th><a href="${esc(v.url)}" target="_blank" rel="noopener" style="color:inherit">${esc(v.name)}</a></th>${cs.map(c=>`<td>${(v.cats||[]).includes(c)?`<a href="${naver((v.kw||v.name)+" "+c)}" target="_blank" rel="noopener" title="${esc(v.name+" "+c)} 검색"><span class="dot on"></span></a>`:'<span class="dot"></span>'}</td>`).join("")}</tr>`).join("")}</table></div></div>`;
+  $("procList").innerHTML=list.map(v=>`<div class="pcard">
+     <div class="ph"><div class="plogo" style="background:${esc(v.color||"#475569")}">${esc((v.name||"?").slice(0,1))}</div>
+       <div style="min-width:0"><h3><a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.name)} ↗</a></h3>
+       <div>${(v.type||[]).map(x=>`<span class="ptype ${esc(x)}">${x==="조달"?"공공조달":x==="기업"?"기업납품":"판매"}</span>`).join("")}</div></div></div>
+     <div style="font-size:13.5px">${esc(v.desc||"")}</div>
+     <div class="pitems">${(v.cats||[]).map(c=>`<a class="${c===procCat?"hit":""}" href="${naver((v.kw||v.name)+" "+c)}" target="_blank" rel="noopener">${esc(c)} 제품 보기</a>`).join("")}</div>
+     <div class="pbtns"><a class="main" href="${esc(v.url)}" target="_blank" rel="noopener">홈페이지 들어가기</a>${(v.type||[]).includes("조달")?`<a class="sub" href="https://shop.g2b.go.kr" target="_blank" rel="noopener">나라장터에서 확인</a>`:""}${v.user&&procDocs[v.id]?`<button class="small ghost" data-pdel="${v.id}">삭제</button>`:""}</div>
+   </div>`).join("")||`<div class="muted">조건에 맞는 업체가 없습니다.</div>`;
+  $("procList").querySelectorAll("[data-pdel]").forEach(b=>b.onclick=async()=>{ if(!b.dataset.armed){b.dataset.armed=1;b.textContent="한 번 더 누르면 삭제";return;} try{ await db.doc("pvendors/"+b.dataset.pdel).delete(); toast("삭제했습니다"); }catch(e){ toast("삭제하지 못했습니다"); } });
+}
+(()=>{ if(!$("procType")) return;
+  $("procType").onchange=renderProcure; $("procQ").oninput=renderProcure;
+  let pfSel=new Set();
+  const pfChips=()=>{ $("pfCats").innerHTML=catNames().map(c=>`<button type="button" class="chip" aria-pressed="${pfSel.has(c)}" data-pf="${esc(c)}">${esc(c)}</button>`).join("");
+    $("pfCats").querySelectorAll("[data-pf]").forEach(b=>b.onclick=()=>{ const c=b.dataset.pf; pfSel.has(c)?pfSel.delete(c):pfSel.add(c); pfChips(); }); };
+  $("procAddBtn").onclick=()=>{ $("procForm").hidden=!$("procForm").hidden; pfSel=new Set(); pfChips(); $("pfMsg").textContent=""; };
+  $("pfCancel").onclick=()=>{ $("procForm").hidden=true; };
+  $("pfSave").onclick=async()=>{ const name=$("pfName").value.trim(); let url=$("pfUrl").value.trim();
+    if(!name||!url){ $("pfMsg").textContent="업체명과 홈페이지 주소를 입력하세요."; return; }
+    if(!/^https?:\/\//.test(url)) url="https://"+url;
+    if(!db){ $("pfMsg").textContent="저장소에 연결되지 않았습니다."; return; }
+    try{ await db.collection("pvendors").add({name,url,type:[$("pfType").value],desc:$("pfDesc").value.trim(),cats:[...pfSel],createdAt:Date.now()});
+      ["pfName","pfUrl","pfDesc"].forEach(i=>$(i).value=""); $("procForm").hidden=true; toast("업체를 추가했습니다"); }
+    catch(e){ $("pfMsg").textContent="저장하지 못했습니다."; } };
+})();
+addEventListener("hashchange",()=>{ if(location.hash==="#procure") renderProcure(); });
 /* ---------- 승인 관리 (부대관리자 · 총괄관리자) ---------- */
 const ROLE_KO={member:"부대원",unit_admin:"부대관리자",super:"총괄관리자"}, ST_KO={pending:"대기",approved:"승인",rejected:"반려",sent:"메일 보냄"};
 async function renderAdmin(){
@@ -1657,7 +1758,7 @@ if(LOCAL && !SUPA){ const f=document.createElement("div"); f.className="wrap"; f
   document.body.appendChild(f); let armed=false;
   $("localReset").onclick=()=>{ if(!armed){armed=true;$("lrMsg").textContent="한 번 더 누르면 입력한 데이터가 모두 지워집니다.";return;} LocalDB.reset(); }; }
 
-renderDashboard(); renderVendors(); renderHome(); route();
+renderDashboard(); renderVendors(); renderHome(); renderProcure(); route();
 (async()=>{
   const note=$("dbNote");
   if(SUPA){ note.hidden=true; const u=await ensureLogin(); me=u.id; db=SupaDB; if(location.hash==="#admin") renderAdmin(); }
@@ -1674,6 +1775,7 @@ renderDashboard(); renderVendors(); renderHome(); route();
   db.collection("products").onSnapshot(s=>{ products=s.docs.map(d=>({id:d.id,...d.data()})); fillProdOptions(); renderDashboard(); renderHome(); },()=>{});
   db.collection("refs").onSnapshot(s=>{ const t={}; s.docs.map(d=>d.data()).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).forEach(x=>{ if(x.key&&x.photo) t[x.key]=x.photo; }); refs=t; refDocs={}; s.docs.forEach(d=>{const x=d.data(); if(x.key) (refDocs[x.key]=refDocs[x.key]||[]).push(d.id);}); renderCriteria(); renderDashboard(); },()=>{});
   db.collection("public").onSnapshot(s=>{ heroDocs=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.key==="hero").sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); renderHeroAdmin(); },()=>{});
+  db.collection("pvendors").onSnapshot(s=>{ procDocs={}; procUser=s.docs.map(d=>{ procDocs[d.id]=1; return {id:d.id,user:true,color:"#475569",...d.data()}; }); renderProcure(); },()=>{});
   db.collection("vendors").onSnapshot(s=>{ vendors=s.docs.map(d=>({id:d.id,...d.data()})); renderVendors(); renderDashboard(); },()=>{});
 })();
 </script>
