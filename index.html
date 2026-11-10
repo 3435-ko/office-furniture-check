@@ -195,7 +195,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono
 .lp-stats div{border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px;display:grid;gap:2px;background:rgba(255,255,255,.04)}
 .lp-stats b{font-size:22px;color:#fff} .lp-stats span{font-size:12px;color:#b7c3ac}
 .lp-photo{position:relative;height:52vh;min-height:300px;max-height:560px;overflow:hidden;background:#1f291c}
-.lp-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 60%}
+.lp-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 35%}
 .lp-credit{position:absolute;right:10px;bottom:8px;z-index:3;font-size:10.5px;color:rgba(255,255,255,.7);text-decoration:none}
 .lp-art{position:absolute;inset:0}
 .lp-art svg{width:100%;height:100%;display:block}
@@ -536,7 +536,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
   <section class="lp-photo" aria-label="사무실 업무 사진">
     <img id="lpHeroImg" alt="군수처 간부들이 사무실에서 업무하는 사진" hidden>
     <div id="lpHeroArt" class="lp-art"></div>
-    <a id="lpCredit" class="lp-credit" href="https://unsplash.com/photos/kN_kViDchA0" target="_blank" rel="noopener" hidden>사진: Arlington Research / Unsplash</a>
+    <a id="lpCredit" class="lp-credit" href="https://unsplash.com/photos/KYlqBrKQ-i4" target="_blank" rel="noopener" hidden>사진: Gorilla ROI Data Connector / Unsplash</a>
     <div class="lp-ov">
       <div class="lp-tag">사무비품 재산관리 현장</div>
       <div class="lp-pins">
@@ -1317,7 +1317,7 @@ const SupaDB=(()=>{
 })();
 /* 메인 페이지 상단 사진: 로그인 전에도 보이는 공개 사진 (coll=public, key=hero) */
 /* 부대 사진을 올리기 전까지 쓰는 무료 사진 (Unsplash License) */
-const STOCK_HERO="https://images.unsplash.com/photo-1560264280-88b68371db39?w=1800&q=80&auto=format&fit=crop";
+const STOCK_HERO="https://images.unsplash.com/photo-1783538771515-78a987fcdbbf?w=1800&q=80&auto=format&fit=crop";
 function showStockHero(){ const im=$("lpHeroImg"); im.onerror=()=>{ im.hidden=true; $("lpHeroArt").hidden=false; $("lpCredit").hidden=true; };
   im.onload=()=>{ im.hidden=false; $("lpHeroArt").hidden=true; $("lpCredit").hidden=false; }; im.src=STOCK_HERO; }
 async function loadLandingPhoto(){
