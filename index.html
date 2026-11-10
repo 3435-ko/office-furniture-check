@@ -562,7 +562,13 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
       <h2>부대 담당자 계정으로 시작하세요</h2>
       <label class="f">이메일<input id="authEmail" type="email" autocomplete="username" required></label>
       <label class="f">비밀번호<input id="authPw" type="password" autocomplete="current-password" minlength="6" required></label>
-      <div class="row"><button class="primary" type="submit">로그인</button><button type="button" class="ghost" id="authSignup">처음이면 가입</button></div>
+      <div class="row"><button class="primary" type="submit">로그인</button><button type="button" class="ghost" id="authSignup">처음이면 가입</button><button type="button" class="ghost" id="authForgot">비밀번호 찾기</button></div>
+      <div id="resetBox" hidden style="display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px">
+        <b>새 비밀번호 설정</b>
+        <label class="f">새 비밀번호 (6자 이상)<input id="newPw" type="password" autocomplete="new-password" minlength="6"></label>
+        <label class="f">새 비밀번호 확인<input id="newPw2" type="password" autocomplete="new-password" minlength="6"></label>
+        <div class="row"><button type="button" class="primary" id="newPwSave">비밀번호 바꾸기</button></div>
+      </div>
       <div id="authMsg" class="muted" style="font-size:13px" aria-live="polite"></div>
       <div class="muted" style="font-size:12px">처음 쓰시면 이메일과 비밀번호(6자 이상)를 넣고 "처음이면 가입"을 누르세요.</div>
     </form>
@@ -1334,7 +1340,21 @@ function ensureLogin(){
   sbClient = sbClient || window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
   return new Promise(async resolve=>{
     const done=u=>{ $("authGate").hidden=true; $("who").hidden=false; $("whoMail").textContent=u.email||""; resolve(u); };
+    const recovery=/type=recovery/.test(location.hash);
     const {data}=await sbClient.auth.getSession();
+    if(recovery && data.session){
+      // 메일의 비밀번호 재설정 링크로 들어온 경우: 새 비밀번호 입력
+      $("authGate").hidden=false; loadLandingPhoto(); $("resetBox").hidden=false;
+      $("authMsg").textContent="새 비밀번호를 입력하세요.";
+      setTimeout(()=>$("resetBox").scrollIntoView({behavior:"smooth",block:"center"}),300);
+      $("newPwSave").onclick=async()=>{ const a=$("newPw").value,b=$("newPw2").value;
+        if(a.length<6){ $("authMsg").textContent="비밀번호는 6자 이상이어야 합니다."; return; }
+        if(a!==b){ $("authMsg").textContent="두 비밀번호가 서로 다릅니다."; return; }
+        const r=await sbClient.auth.updateUser({password:a});
+        if(r.error){ $("authMsg").textContent="바꾸지 못했습니다: "+r.error.message; return; }
+        history.replaceState(null,"",location.pathname+"#home"); $("resetBox").hidden=true; toast("비밀번호를 바꿨습니다"); done(data.session.user); };
+      return;
+    }
     if(data.session){ done(data.session.user); return; }
     $("authGate").hidden=false; loadLandingPhoto();
     document.querySelectorAll('#authGate a[href="#lpLogin"]').forEach(a=>a.onclick=e=>{e.preventDefault(); $("authForm").scrollIntoView({behavior:"smooth",block:"center"}); setTimeout(()=>$("authEmail").focus(),400);});
@@ -1350,6 +1370,11 @@ function ensureLogin(){
     };
     $("authForm").onsubmit=e=>{e.preventDefault();go("in");};
     $("authSignup").onclick=()=>go("up");
+    $("authForgot").onclick=async()=>{ const email=$("authEmail").value.trim();
+      if(!email){ msg("가입할 때 쓴 이메일을 먼저 입력하고 다시 누르세요."); return; }
+      msg("메일을 보내는 중…");
+      const r=await sbClient.auth.resetPasswordForEmail(email,{redirectTo:location.origin+"/"});
+      msg(r.error?"메일을 보내지 못했습니다: "+r.error.message:"비밀번호 재설정 메일을 보냈습니다. 메일의 링크를 누르면 새 비밀번호를 정할 수 있습니다."); };
   });
 }
 if(SUPA){ $("logoutBtn").onclick=async()=>{ await sbClient.auth.signOut(); location.reload(); }; }
