@@ -152,7 +152,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono
 .pcard .plogo{flex:0 0 auto;width:46px;height:46px;border-radius:10px;display:grid;place-items:center;font-weight:800;color:#fff;font-size:17px}
 .pcard h3{font-size:17px;margin:0}.pcard h3 a{color:inherit;text-decoration:none}.pcard h3 a:hover{text-decoration:underline}
 .ptype{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;margin-right:4px;display:inline-block}
-.ptype.조달{background:#dcebf7;color:#123a5c}.ptype.기업{background:#e7f0e1;color:#2f5a1f}.ptype.판매{background:#f6ead8;color:#7a4a10}
+.ptype.조달{background:#dcebf7;color:#123a5c}.ptype.기업{background:#e7f0e1;color:#2f5a1f}.ptype.판매{background:#f6ead8;color:#7a4a10}.ptype.플랫폼{background:#ede4f7;color:#4c1d95}
 .pitems{display:flex;flex-wrap:wrap;gap:6px}.pitems a{font-size:12.5px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);text-decoration:none;color:inherit;background:var(--sunk)}
 .pitems a:hover{border-color:var(--accent)}.pitems a.hit{background:var(--accent);color:var(--bg);border-color:var(--accent)}
 .pbtns{display:flex;gap:8px;flex-wrap:wrap}.pbtns a{font-size:13px;padding:7px 12px;border-radius:8px;text-decoration:none;font-weight:600}
@@ -566,7 +566,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
   <div class="infog" id="procInfo" style="margin:14px 0"></div>
   <div class="filters" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
     <div class="chips" id="procCats"></div>
-    <select id="procType"><option value="">납품·판매 전체</option><option value="조달">공공조달 납품</option><option value="기업">기업 납품(B2B)</option><option value="판매">온라인·매장 판매</option></select>
+    <select id="procType"><option value="">납품·판매 전체</option><option value="조달">공공조달 납품</option><option value="기업">기업 납품(B2B)</option><option value="판매">온라인·매장 판매</option><option value="플랫폼">구매 플랫폼·조달 시스템</option></select>
     <input id="procQ" placeholder="업체·제품 검색" style="width:160px">
     <button class="primary small" id="procAddBtn">+ 업체 추가</button>
   </div>
@@ -575,7 +575,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
     <div class="form">
       <label class="f">업체명<input id="pfName"></label>
       <label class="f">홈페이지 주소<input id="pfUrl" placeholder="https://"></label>
-      <label class="f">납품·판매 형태<select id="pfType"><option>조달</option><option>기업</option><option>판매</option></select></label>
+      <label class="f">납품·판매 형태<select id="pfType"><option>조달</option><option>기업</option><option>판매</option><option>플랫폼</option></select></label>
       <label class="f">특징(한 줄)<input id="pfDesc"></label>
     </div>
     <div class="label">취급 품목</div><div class="chips" id="pfCats"></div>
@@ -635,6 +635,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
       <div id="lpLogin" class="lp-eyebrow" style="color:var(--accent)">담당자 로그인</div>
       <h2>부대 담당자 계정으로 시작하세요</h2>
       <button type="button" class="gbtn" id="authGoogle"><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.8-2.1 5.1-4.4 6.7v5.5h7.1c4.2-3.8 6.6-9.5 6.6-16.2z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.5 46 24 46z"/><path fill="#FBBC05" d="M11.8 28.3c-.4-1.3-.7-2.8-.7-4.3s.3-3 .7-4.3V14H4.5C3 17 2.2 20.4 2.2 24s.8 7 2.3 10l7.3-5.7z"/><path fill="#EA4335" d="M24 10.7c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.2 29.9 2 24 2 15.5 2 8.1 6.9 4.5 14l7.3 5.7c1.7-5.2 6.5-9 12.2-9z"/></svg>Google 계정으로 로그인</button>
+      <div id="gsiBox" hidden style="display:flex;justify-content:center;min-height:44px"></div>
       <button type="button" class="gbtn qbtn" id="authQr"><svg viewBox="0 0 24 24" width="20" height="20" class="ic" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 20h2M20 14v2"/></svg>휴대폰으로 QR 찍어 이 PC 로그인</button>
       <div id="qrBox" hidden class="qrbox">
         <div class="qrimg" id="qrImg"></div>
@@ -1547,6 +1548,20 @@ function ensureLogin(){
     $("authSignup").onclick=()=>go("up");
     const hm=new URLSearchParams(location.hash.slice(1)).get("error_description")||new URLSearchParams(location.search).get("error_description");
     if(hm) msg("Google 로그인 실패: "+hm);
+    // Google 계정 버튼 (Google Identity Services: 비밀키 없이 ID 토큰으로 로그인)
+    const GOOGLE_CLIENT_ID="457022333370-kcjahpaagdk9gfmchdo7m6ls9jkf78uh.apps.googleusercontent.com";
+    (async()=>{ try{
+      await new Promise((ok,bad)=>{ if(window.google?.accounts?.id) return ok(); const sc=document.createElement("script"); sc.src="https://accounts.google.com/gsi/client"; sc.async=true; sc.onload=ok; sc.onerror=bad; document.head.appendChild(sc); setTimeout(()=>bad("timeout"),8000); });
+      const raw=[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,"0")).join("");
+      const hashed=[...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(raw)))].map(b=>b.toString(16).padStart(2,"0")).join("");
+      google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,nonce:hashed,ux_mode:"popup",use_fedcm_for_prompt:true,
+        callback:async resp=>{ msg("Google 계정으로 들어가는 중…");
+          const {data,error}=await sbClient.auth.signInWithIdToken({provider:"google",token:resp.credential,nonce:raw});
+          if(error){ msg("Google 로그인 실패: "+error.message); return; } msg(""); done(data.user); }});
+      const w=Math.min(400,Math.max(220,$("authForm").clientWidth-48));
+      google.accounts.id.renderButton($("gsiBox"),{theme:"outline",size:"large",text:"signin_with",shape:"rectangular",logo_alignment:"center",width:w,locale:"ko"});
+      $("gsiBox").hidden=false; $("authGoogle").hidden=true;
+    }catch(e){ /* 실패하면 아래 기존 버튼(리디렉션 방식) 사용 */ } })();
     $("authGoogle").onclick=async()=>{ msg("Google로 이동하는 중…");
       const {error}=await sbClient.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+"/",queryParams:{prompt:"select_account"}}});
       if(error) msg(/not enabled|Unsupported provider/i.test(error.message)?"Google 로그인이 아직 켜져 있지 않습니다. 관리자에게 문의하세요.":"Google 로그인 실패: "+error.message); };
@@ -1614,7 +1629,27 @@ const PROC_SEED=[
  {id:"s9",name:"한샘",url:"https://www.hanssem.com",type:["기업","판매"],color:"#b91c1c",cats:["책상","의자","옷장","서류함","책장"],desc:"종합 가구·인테리어 기업. 오피스 가구 사업과 온라인몰 판매.",kw:"한샘 사무용 가구"},
  {id:"s10",name:"듀오백(DUOBACK)",url:"https://www.duoback.co.kr",type:["기업","판매"],color:"#1e40af",cats:["의자","책상"],desc:"등받이 2분할 의자로 알려진 의자 전문 브랜드.",kw:"듀오백 사무용 의자"},
  {id:"s11",name:"이케아 비즈니스",url:"https://www.ikea.com/kr/ko/",type:["기업","판매"],color:"#0058a3",cats:["책상","의자","옷장","서류함","티테이블","책장"],desc:"저가형 사무가구·수납가구. 매장·온라인 판매, 기업 구매 상담.",kw:"이케아 사무용"},
- {id:"s12",name:"코스트코 (사무가구)",url:"https://www.costco.co.kr/FurnitureBeddingHome/Office-Furniture/c/cos_11.9",type:["판매"],color:"#005daa",cats:["책상","의자","서류함"],desc:"회원제 창고형 매장의 사무가구 코너. 의자·책상 묶음 구매에 유리.",kw:"코스트코 사무용 의자"}
+ {id:"s12",name:"코스트코 (사무가구)",url:"https://www.costco.co.kr/FurnitureBeddingHome/Office-Furniture/c/cos_11.9",type:["판매"],color:"#005daa",cats:["책상","의자","서류함"],desc:"회원제 창고형 매장의 사무가구 코너. 의자·책상 묶음 구매에 유리.",kw:"코스트코 사무용 의자"},
+ {id:"s13",name:"크로바가구(CLOVER)",url:"https://cloveroa.co.kr",type:["조달","기업"],color:"#2f7d32",cats:["책상","의자","서류함","티테이블","파티션","책장"],desc:"사무·교육 가구 제조. 조달청 우수제품 라인과 파티션·중역의자·소파 취급(홈페이지 기준).",kw:"크로바가구"},
+ {id:"s14",name:"스틸케이스(Steelcase)",url:"https://www.steelcase.com/ko-kr/",type:["기업"],color:"#111827",cats:["책상","의자","서류함","티테이블","파티션"],desc:"미국 글로벌 오피스가구 기업. 대기업·외국계 사무실 프로젝트 납품.",kw:"스틸케이스 오피스"},
+ {id:"s15",name:"허먼밀러(Herman Miller)",url:"https://www.hermanmiller.com/ko_kr/",type:["기업","판매"],color:"#9f1239",cats:["의자","책상","서류함"],desc:"고급 사무용 의자(에어론 등)와 오피스 시스템 가구.",kw:"허먼밀러 의자"},
+ {id:"s16",name:"하워스(Haworth)",url:"https://www.haworth.com",type:["기업","판매"],color:"#0e7490",cats:["의자","책상","파티션","서류함"],desc:"글로벌 오피스가구 기업. 인체공학 의자·워크스테이션·파티션.",kw:"하워스 의자"},
+ {id:"s17",name:"알로소(alloso)",url:"https://www.alloso.co.kr",type:["판매"],color:"#78350f",cats:["티테이블"],desc:"소파 전문 브랜드(퍼시스그룹). 지휘관실·접견실 소파와 테이블.",kw:"알로소 소파"},
+ {id:"s18",name:"까사미아",url:"https://www.casamia.co.kr",type:["판매"],color:"#57534e",cats:["책상","의자","티테이블","책장","옷장"],desc:"신세계 계열 리빙 브랜드. 접견실·간부 숙소용 가구.",kw:"까사미아 책상"},
+ {id:"s19",name:"동서가구",url:"https://www.dongsuhfurniture.co.kr",type:["판매"],color:"#a16207",cats:["책상","책장","옷장","서류함"],desc:"중저가 생활·사무 가구 온라인 판매. 책상·책장·수납장.",kw:"동서가구 책상"},
+ {id:"s20",name:"에몬스",url:"https://www.emons.co.kr",type:["판매"],color:"#4d7c0f",cats:["책상","책장","옷장"],desc:"종합 가구 브랜드. 책상·책장·붙박이 옷장.",kw:"에몬스 책상"},
+ {id:"s21",name:"보컨셉(BoConcept)",url:"https://www.boconcept.com/ko-kr/",type:["판매"],color:"#1c1917",cats:["책상","의자","티테이블","책장"],desc:"덴마크 디자인 가구. 모던·디자인형 집무실·접견실 가구.",kw:"보컨셉 책상"},
+ {id:"s22",name:"무인양품(MUJI)",url:"https://www.muji.com/kr/",type:["판매"],color:"#7f1d1d",cats:["책상","책장","서류함"],desc:"단순한 디자인의 수납·책상·책장. 소형 사무실 수납용.",kw:"무인양품 수납"},
+ {id:"s23",name:"놀(Knoll)",url:"https://www.knoll.com",type:["기업"],color:"#be123c",cats:["책상","의자","티테이블","파티션","서류함"],desc:"미국 디자인 오피스가구. 임원실·회의실 고급 가구.",kw:"놀 오피스 가구"},
+ {id:"s24",name:"USM 할러",url:"https://www.usm.com",type:["기업","판매"],color:"#64748b",cats:["서류함","책장","책상"],desc:"스위스 모듈형 철제 수납 시스템. 서류함·책장 조합형.",kw:"USM 할러"},
+ {id:"s25",name:"알파(ALPHA)",url:"https://www.alpha.co.kr",type:["판매"],color:"#dc2626",cats:["의자","서류함","책장","책상"],desc:"사무용품 전문 유통. 사무용 의자·수납가구까지 함께 구매.",kw:"알파 사무용 가구"},
+ {id:"s26",name:"쿠팡(쿠팡비즈)",url:"https://www.coupang.com",type:["플랫폼","판매"],color:"#e11d48",cats:["책상","의자","옷장","서류함","티테이블","파티션","책장"],desc:"온라인 쇼핑몰. 소량·긴급 구매와 가격 비교에 유용.",kw:"쿠팡 사무용 가구"},
+ {id:"s27",name:"오늘의집",url:"https://ohou.se",type:["플랫폼","판매"],color:"#0ea5e9",cats:["책상","의자","옷장","서류함","티테이블","책장"],desc:"인테리어·가구 쇼핑 플랫폼. 사진 후기로 디자인 비교.",kw:"오늘의집 사무용 책상"},
+ {id:"s28",name:"SSG닷컴",url:"https://www.ssg.com",type:["플랫폼","판매"],color:"#d97706",cats:["책상","의자","서류함","책장"],desc:"신세계 온라인몰. 브랜드 사무가구 비교 구매.",kw:"SSG 사무용 의자"},
+ {id:"s29",name:"11번가",url:"https://www.11st.co.kr",type:["플랫폼","판매"],color:"#f43f5e",cats:["책상","의자","서류함","파티션","책장"],desc:"오픈마켓. 파티션·캐비닛 등 다양한 업체 제품 비교.",kw:"11번가 사무용 파티션"},
+ {id:"s30",name:"롯데아이몰",url:"https://www.lotteimall.com",type:["플랫폼","판매"],color:"#b91c1c",cats:["책상","의자","책장"],desc:"롯데 온라인몰. 브랜드 가구 기획전.",kw:"롯데아이몰 사무용 의자"},
+ {id:"s31",name:"학교장터(S2B)",url:"https://www.s2b.kr",type:["플랫폼","조달"],color:"#15803d",cats:["책상","의자","옷장","서류함","티테이블","파티션","책장"],desc:"한국교직원공제회 운영 공공 전자조달 장터. 소액 수의계약 구매에 활용.",kw:"학교장터 사무용 가구"},
+ {id:"s32",name:"국방전자조달시스템",url:"https://www.d2b.go.kr",type:["플랫폼","조달"],color:"#3f6212",cats:["책상","의자","옷장","서류함","티테이블","파티션","책장"],desc:"방위사업청 국방 조달 시스템. 군 입찰·계약 공고 확인.",kw:"국방전자조달 사무용 가구"}
 ];
 let procUser=[], procCat="", procDocs={};
 const procAll=()=>[...PROC_SEED,...procUser];
@@ -1626,15 +1661,15 @@ function renderProcure(){
   $("procCats").innerHTML=[["","전체"],...cs.map(c=>[c,c])].map(([v,l])=>`<button class="chip" data-pc="${esc(v)}" aria-pressed="${procCat===v}">${esc(l)} <span>${v?all.filter(x=>(x.cats||[]).includes(v)).length:all.length}</span></button>`).join("");
   $("procCats").querySelectorAll("[data-pc]").forEach(b=>b.onclick=()=>{procCat=b.dataset.pc;renderProcure();});
   const list=all.filter(x=>(!procCat||(x.cats||[]).includes(procCat))&&(!t||(x.type||[]).includes(t))&&(!q||(x.name+" "+x.desc+" "+(x.cats||[]).join(" ")).includes(q)));
-  $("procInfo").innerHTML=`<div class="ig1 vsum"><div><div class="big A">${all.length}</div><div class="label">등록 업체</div></div>
-      <div><div class="big B">${all.filter(x=>(x.type||[]).includes("조달")).length}</div><div class="label">공공조달 납품</div></div>
+  $("procInfo").innerHTML=`<div class="ig1 vsum"><div><div class="big A">${all.length}</div><div class="label">등록 업체·몰</div></div>
+      <div><div class="big B">${all.filter(x=>(x.type||[]).includes("조달")).length}</div><div class="label">공공조달 납품·시스템</div></div>
       <div><div class="big C">${cs.length}</div><div class="label">관리 품목</div></div></div>
     <div class="ig2" style="grid-column:span 2"><div class="label" style="margin-bottom:8px">업체별 취급 품목 (품목을 누르면 그 업체의 제품 검색)</div><div class="tablewrap"><table class="mx"><tr><th></th>${cs.map(c=>`<th>${esc(c)}</th>`).join("")}</tr>
       ${all.map(v=>`<tr><th><a href="${esc(v.url)}" target="_blank" rel="noopener" style="color:inherit">${esc(v.name)}</a></th>${cs.map(c=>`<td>${(v.cats||[]).includes(c)?`<a href="${naver((v.kw||v.name)+" "+c)}" target="_blank" rel="noopener" title="${esc(v.name+" "+c)} 검색"><span class="dot on"></span></a>`:'<span class="dot"></span>'}</td>`).join("")}</tr>`).join("")}</table></div></div>`;
   $("procList").innerHTML=list.map(v=>`<div class="pcard">
      <div class="ph"><div class="plogo" style="background:${esc(v.color||"#475569")}">${esc((v.name||"?").slice(0,1))}</div>
        <div style="min-width:0"><h3><a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.name)} ↗</a></h3>
-       <div>${(v.type||[]).map(x=>`<span class="ptype ${esc(x)}">${x==="조달"?"공공조달":x==="기업"?"기업납품":"판매"}</span>`).join("")}</div></div></div>
+       <div>${(v.type||[]).map(x=>`<span class="ptype ${esc(x)}">${x==="조달"?"공공조달":x==="기업"?"기업납품":x==="플랫폼"?"구매 플랫폼":"판매"}</span>`).join("")}</div></div></div>
      <div style="font-size:13.5px">${esc(v.desc||"")}</div>
      <div class="pitems">${(v.cats||[]).map(c=>`<a class="${c===procCat?"hit":""}" href="${naver((v.kw||v.name)+" "+c)}" target="_blank" rel="noopener">${esc(c)} 제품 보기</a>`).join("")}</div>
      <div class="pbtns"><a class="main" href="${esc(v.url)}" target="_blank" rel="noopener">홈페이지 들어가기</a>${(v.type||[]).includes("조달")?`<a class="sub" href="https://shop.g2b.go.kr" target="_blank" rel="noopener">나라장터에서 확인</a>`:""}${v.user&&procDocs[v.id]?`<button class="small ghost" data-pdel="${v.id}">삭제</button>`:""}</div>
