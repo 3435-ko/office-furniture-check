@@ -194,7 +194,26 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono
 @media (max-width:520px){.lp-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .lp-stats div{border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px;display:grid;gap:2px;background:rgba(255,255,255,.04)}
 .lp-stats b{font-size:22px;color:#fff} .lp-stats span{font-size:12px;color:#b7c3ac}
-.lp-scene{margin-top:-40px;position:relative}
+.lp-photo{position:relative;height:52vh;min-height:300px;max-height:560px;overflow:hidden;background:#1f291c}
+.lp-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.lp-art{position:absolute;inset:0}
+.lp-art svg{width:100%;height:100%;display:block}
+.lp-art .co{display:none}
+.lp-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,22,12,.15) 0%,rgba(15,22,12,0) 35%,rgba(15,22,12,.55) 80%,#2f3d2b 100%);pointer-events:none}
+.lp-ov{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;justify-content:space-between;padding:18px max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px));max-width:1120px;margin:0 auto}
+.lp-tag{align-self:flex-start;background:rgba(15,22,12,.7);color:#e9f1df;font-size:12px;font-weight:700;letter-spacing:.06em;padding:6px 12px;border-radius:999px;backdrop-filter:blur(6px)}
+.lp-pins{position:relative;flex:1}
+.pin{position:absolute;display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:center;background:rgba(255,255,255,.88);color:#1d2a17;border-radius:12px;padding:8px 12px;box-shadow:0 8px 24px rgba(0,0,0,.25);backdrop-filter:blur(6px)}
+.pin i{grid-row:span 2;width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 4px rgba(255,255,255,.6)}
+.pin i.A{background:#2e7d4f} .pin i.B{background:#2f6aa8} .pin i.C{background:#b07a12} .pin i.D{background:#b3392f}
+.pin b{font-size:14px} .pin span{font-size:11.5px;color:#5d6559}
+.pin.p1{left:4%;top:12%} .pin.p2{left:30%;top:42%} .pin.p3{right:28%;top:8%} .pin.p4{right:4%;top:46%;outline:2px solid #b3392f}
+@media (max-width:640px){.pin span{display:none}.pin{padding:6px 10px}.pin.p2{left:8%;top:52%}.pin.p3{right:6%;top:10%}}
+.lp-strip{align-self:center;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;background:rgba(15,22,12,.72);color:#e9f1df;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;backdrop-filter:blur(6px)}
+.lp-strip em{font-style:normal;color:#9cc27f} .lp-strip .hot{color:#ffb3a8}
+.lp-hero{padding-block:36px 56px!important}
+.heroAdmin{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.heroAdmin img{width:120px;height:68px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
 .lp-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 20px 50px rgba(0,0,0,.12);overflow-x:auto}
 #lpScene svg{display:block;width:100%;min-width:620px;height:auto;border-radius:10px}
 #lpScene .co{pointer-events:none}
@@ -349,6 +368,11 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
     <h1 class="htitle">AI를 적용하여 사무비품 재산관리를<br>편하게 해 보끄나!!</h1>
     <p class="hsub">휴대폰으로 사진 한 장 찍으면 A~D급 질정분류, 요정비 부위, 폐품 여부, 정비업체와 단가까지 한 번에 나옵니다.</p>
     <div class="row"><button class="primary" onclick="location.hash='inspect'">사진 찍어서 판정하기</button><button onclick="location.hash='dashboard'">보유 비품 현황 보기</button></div>
+  </div>
+  <div class="panel" style="display:grid;gap:6px">
+    <h2>메인 페이지 상단 사진</h2>
+    <div class="muted" style="font-size:13px">로그인 전 첫 화면 위쪽 절반에 들어가는 사진입니다. 사무실에서 업무하는 모습과 사무비품이 함께 보이는 가로 사진을 올리면 등급 안내가 사진 위에 겹쳐 표시됩니다.</div>
+    <div class="heroAdmin"><img id="heroPrev" alt="현재 메인 사진" hidden><label class="btn small upbtn">사진 올리기<input type="file" accept="image/*" id="heroIn"></label><button class="small ghost" id="heroDel" hidden>사진 삭제 (그림으로 되돌리기)</button><span id="heroMsg" class="muted" style="font-size:13px"></span></div>
   </div>
   <figure class="scene panel">
     <div class="scenewrap"><div id="officeScene"></div></div>
@@ -508,6 +532,20 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
  <div class="lp">
   <header class="lp-top"><div class="lp-w lp-row"><div class="brand"><div class="mark">비품</div><div>사무비품 상태판정<small>AI 재산관리 · 질정분류 · 폐품판정</small></div></div>
     <a class="lp-btn ghostw" href="#lpLogin" id="lpTopLogin">로그인</a></div></header>
+  <section class="lp-photo" aria-label="사무실 업무 사진">
+    <img id="lpHeroImg" alt="군수처 간부들이 사무실에서 업무하는 사진" hidden>
+    <div id="lpHeroArt" class="lp-art"></div>
+    <div class="lp-ov">
+      <div class="lp-tag">군수처 · 사무비품 재산관리 현장</div>
+      <div class="lp-pins">
+        <div class="pin p1"><i class="A"></i><b>A급</b><span>신품급 · 사용</span></div>
+        <div class="pin p2"><i class="B"></i><b>B급</b><span>사용가능</span></div>
+        <div class="pin p3"><i class="C"></i><b>C급</b><span>요정비 · 정비 연결</span></div>
+        <div class="pin p4"><i class="D"></i><b>D급</b><span>폐품 자동판정</span></div>
+      </div>
+      <div class="lp-strip"><span>사진 촬영</span><em>→</em><span>AI 질정분류</span><em>→</em><span class="hot">폐품판정</span><em>→</em><span>사무실별 현황</span></div>
+    </div>
+  </section>
   <section class="lp-hero"><div class="lp-w lp-hgrid">
     <div class="lp-copy">
       <div class="lp-eyebrow">군 부대 사무비품 재산관리 서비스</div>
@@ -527,8 +565,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
       <div class="muted" style="font-size:12px">처음 쓰시면 이메일과 비밀번호(6자 이상)를 넣고 "처음이면 가입"을 누르세요.</div>
     </form>
   </div></section>
-  <section class="lp-w lp-scene"><div class="lp-card"><div id="lpScene"></div>
-    <div class="lp-cap">○○대대 행정반 · 책상 · 의자 · 옷장 · 서류함 · 티테이블 · 파티션 · 책장 7종을 사진 한 장으로 관리합니다</div></div></section>
+
   <section class="lp-w lp-sec"><div class="lp-h"><span class="lp-num">01</span><h2>이렇게 판정합니다</h2></div>
     <div class="lp-flow">
       <div><i><svg viewBox="0 0 24 24" class="ic"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></i><b>촬영·업로드</b><span>정면·측면·후면·손상부위 4장</span></div>
@@ -1236,6 +1273,17 @@ function officeSVG(){
   ${co(7,105,200,"책장","책장",-80,-50)}
   </svg>`;
 }
+let heroDocs=[];
+function renderHeroAdmin(){
+  const last=heroDocs[heroDocs.length-1];
+  $("heroPrev").hidden=!last; if(last) $("heroPrev").src=last.photo; $("heroDel").hidden=!last;
+}
+$("heroIn").onchange=async e=>{ const f=e.target.files[0]; if(!f) return; if(!db){ $("heroMsg").textContent="저장소에 연결되지 않았습니다."; return; }
+  $("heroMsg").textContent="올리는 중…";
+  try{ const r=await shrink(f,1600,0.8); await db.collection("public").add({key:"hero",photo:r.dataUrl,createdAt:Date.now()});
+    for(const d of heroDocs) await db.doc("public/"+d.id).delete(); $("heroMsg").textContent=""; toast("메인 사진을 바꿨습니다"); }
+  catch(err){ $("heroMsg").textContent="올리지 못했습니다. 권한을 확인하세요."; } };
+$("heroDel").onclick=async()=>{ try{ for(const d of heroDocs) await db.doc("public/"+d.id).delete(); toast("메인 사진을 삭제했습니다"); }catch(err){ $("heroMsg").textContent="삭제하지 못했습니다."; } };
 function renderHome(){
   $("officeScene").innerHTML=officeSVG();
   $("officeScene").querySelectorAll(".co").forEach(g=>{const go=()=>{bCat=g.dataset.c;bProd="";location.hash="dashboard";renderDashboard();}; g.addEventListener("click",go); g.addEventListener("keydown",e=>{if(e.key==="Enter")go();});});
@@ -1265,13 +1313,22 @@ const SupaDB=(()=>{
         const {error}=await sbClient.from(T).update({data:{...row.data,...d}}).eq("id",id); if(error) throw fail(error); await load(n); } }; }
   };
 })();
+/* 메인 페이지 상단 사진: 로그인 전에도 보이는 공개 사진 (coll=public, key=hero) */
+async function loadLandingPhoto(){
+  try{ $("lpHeroArt").innerHTML=officeSVG(); $("lpHeroArt").querySelector("svg").setAttribute("preserveAspectRatio","xMidYMid slice"); }catch(e){}
+  try{ const c=sbClient||window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey);
+    const {data}=await c.from("records").select("data").eq("coll","public").order("created_at",{ascending:false}).limit(5);
+    const row=(data||[]).find(r=>r.data&&r.data.key==="hero"&&r.data.photo);
+    if(row){ const im=$("lpHeroImg"); im.src=row.data.photo; im.hidden=false; $("lpHeroArt").hidden=true; }
+  }catch(e){}
+}
 function ensureLogin(){
   sbClient = sbClient || window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
   return new Promise(async resolve=>{
     const done=u=>{ $("authGate").hidden=true; $("who").hidden=false; $("whoMail").textContent=u.email||""; resolve(u); };
     const {data}=await sbClient.auth.getSession();
     if(data.session){ done(data.session.user); return; }
-    $("authGate").hidden=false; try{ $("lpScene").innerHTML=officeSVG(); }catch(e){}
+    $("authGate").hidden=false; loadLandingPhoto();
     document.querySelectorAll('#authGate a[href="#lpLogin"]').forEach(a=>a.onclick=e=>{e.preventDefault(); $("authForm").scrollIntoView({behavior:"smooth",block:"center"}); setTimeout(()=>$("authEmail").focus(),400);});
     const msg=t=>$("authMsg").textContent=t;
     const go=async mode=>{
@@ -1357,6 +1414,7 @@ renderDashboard(); renderVendors(); renderHome(); route();
   db.collection("categories").onSnapshot(s=>{ CATS={...DEFAULT_CATS}; catDocs={}; s.docs.forEach(d=>{const x=d.data(); if(x.name){ CATS[x.name]=x.life||10; if(!DEFAULT_CATS[x.name]) catDocs[x.name]=d.id; }}); catsChanged(); },()=>{});
   db.collection("products").onSnapshot(s=>{ products=s.docs.map(d=>({id:d.id,...d.data()})); fillProdOptions(); renderDashboard(); renderHome(); },()=>{});
   db.collection("refs").onSnapshot(s=>{ const t={}; s.docs.map(d=>d.data()).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).forEach(x=>{ if(x.key&&x.photo) t[x.key]=x.photo; }); refs=t; refDocs={}; s.docs.forEach(d=>{const x=d.data(); if(x.key) (refDocs[x.key]=refDocs[x.key]||[]).push(d.id);}); renderCriteria(); renderDashboard(); },()=>{});
+  db.collection("public").onSnapshot(s=>{ heroDocs=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.key==="hero").sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); renderHeroAdmin(); },()=>{});
   db.collection("vendors").onSnapshot(s=>{ vendors=s.docs.map(d=>({id:d.id,...d.data()})); renderVendors(); renderDashboard(); },()=>{});
 })();
 </script>
