@@ -1,0 +1,1084 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script><script>window.APP_CONFIG={supabaseUrl:"https://ihcomdxdbfgagmwooait.supabase.co",supabaseAnonKey:"sb_publishable_CeF1hU5lqic9so65PNeN3Q_oi5evrli"};</script></head><body><title>사무비품 상태판정</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 상단 탭바 + 단일 컬럼 작업영역. 현황 → 촬영·판정 → 업체 → 기준 */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --sunk:#e8eae4; --line:#d3d6cd;
+  --fg:#1c211b; --muted:#5d6559; --ink:#2f3d2b; --ink-fg:#f3f4f1; --accent:#3f5a2e;
+  --gA:#2e7d4f; --gB:#2f6aa8; --gC:#b07a12; --gD:#b3392f;
+  --gA-bg:#e1f1e7; --gB-bg:#e2ecf7; --gC-bg:#f8eed8; --gD-bg:#f8e3e0;
+  --font:"IBM Plex Sans KR",system-ui,-apple-system,"Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141812; --surface:#1d221a; --sunk:#252b22; --line:#363e32;
+  --fg:#e6e9e2; --muted:#9aa394; --ink:#2b3727; --ink-fg:#e6e9e2; --accent:#9cc27f;
+  --gA:#6fcf97; --gB:#79aee6; --gC:#e2b04a; --gD:#ef7b70;
+  --gA-bg:#1d3326; --gB-bg:#1b2b3d; --gC-bg:#3a2f15; --gD-bg:#3d1f1c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141812; --surface:#1d221a; --sunk:#252b22; --line:#363e32;
+  --fg:#e6e9e2; --muted:#9aa394; --ink:#2b3727; --ink-fg:#e6e9e2; --accent:#9cc27f;
+  --gA:#6fcf97; --gB:#79aee6; --gC:#e2b04a; --gD:#ef7b70;
+  --gA-bg:#1d3326; --gB-bg:#1b2b3d; --gC-bg:#3a2f15; --gD-bg:#3d1f1c; color-scheme:dark}
+*{box-sizing:border-box} [hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ink)}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{background:var(--ink);color:var(--ink-fg);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.top .wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em}
+.brand .mark{width:34px;height:28px;border:2px solid currentColor;border-radius:4px;display:grid;place-items:center;font-family:var(--mono);font-size:12px}
+.brand small{display:block;font-weight:400;opacity:.7;font-size:11px;letter-spacing:.04em}
+nav.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+nav.tabs a{color:inherit;text-decoration:none;padding:7px 12px;border-radius:6px;font-size:14px;opacity:.78}
+nav.tabs a[aria-current="page"]{background:rgba(255,255,255,.14);opacity:1;font-weight:600}
+nav.tabs a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-block:20px 60px;display:grid;gap:20px}
+h1,h2,h3{margin:0;line-height:1.3;text-wrap:balance}
+h1{font-size:22px} h2{font-size:18px} h3{font-size:15px}
+.muted{color:var(--muted)} .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.grid2>*{min-width:0}
+.notice{font-size:13px;padding:10px 12px;border-radius:6px;background:var(--sunk);color:var(--muted)}
+.notice.warn{background:var(--gC-bg);color:var(--fg)}
+.notice.err{background:var(--gD-bg);color:var(--fg)}
+button,.btn{font:inherit;font-size:14px;font-weight:600;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:9px 14px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.ghost{background:transparent}
+button.small{padding:5px 10px;font-size:13px}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+input,select,textarea{font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+textarea{min-height:64px;resize:vertical}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+
+/* 현황 */
+.gradebar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.gstat{border-radius:8px;padding:12px 14px;border:1px solid var(--line);background:var(--surface);text-align:left;cursor:pointer;display:grid;gap:2px}
+.gstat[aria-pressed="true"]{outline:2px solid var(--fg);outline-offset:-2px}
+.gstat .g{font-family:var(--mono);font-size:13px;font-weight:600}
+.gstat .n{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.gstat .s{font-size:12px;color:var(--muted)}
+.gstat.A{border-top:4px solid var(--gA)} .gstat.B{border-top:4px solid var(--gB)} .gstat.C{border-top:4px solid var(--gC)} .gstat.D{border-top:4px solid var(--gD)}
+.kpis{display:flex;gap:28px;flex-wrap:wrap}
+.kpi .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:720px}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--sunk)}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:13px}
+.thumb{width:44px;height:44px;border-radius:5px;object-fit:cover;background:var(--sunk);display:block}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.A{background:var(--gA-bg);color:var(--gA)} .pill.B{background:var(--gB-bg);color:var(--gB)}
+.pill.C{background:var(--gC-bg);color:var(--gC)} .pill.D{background:var(--gD-bg);color:var(--gD)}
+.pill.N{background:var(--sunk);color:var(--muted)}
+.vd{font-size:13px;font-weight:600}
+.vd.사용{color:var(--gA)} .vd.요정비{color:var(--gC)} .vd.폐품{color:var(--gD)}
+.tag{font-size:11px;padding:1px 6px;border-radius:4px;background:var(--sunk);color:var(--muted)}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filters input{max-width:220px} .filters select{width:auto}
+
+.cats{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.cat{flex:0 0 auto;width:104px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:6px;display:grid;gap:4px;cursor:pointer;text-align:left;font-size:13px;font-weight:600}
+.cat img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:5px;background:var(--sunk)}
+.cat span{font-weight:400;color:var(--muted);font-size:12px}
+.cat[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:-2px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.card{border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;cursor:pointer;display:grid;text-align:left;padding:0;font-weight:400}
+.card .ph{position:relative;aspect-ratio:4/3;background:var(--sunk)}
+.card .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.card .ph .pill{position:absolute;top:8px;left:8px}
+.card .ph .cnt{position:absolute;bottom:8px;right:8px;font-size:11px;background:rgba(0,0,0,.6);color:#fff;padding:1px 6px;border-radius:4px}
+.card .bd{padding:10px 12px;display:grid;gap:2px;font-size:13px}
+.card .bd b{font-size:14px}
+.card .ft{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.crumbs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:15px}
+.crumbs button{border:none;background:none;padding:2px 4px;color:var(--accent);font-weight:600}
+.crumbs .cur{font-weight:700}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.tile{border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;cursor:pointer;display:grid;text-align:left;padding:0;font-weight:400}
+.tile .ph{aspect-ratio:4/3;background:var(--sunk);position:relative}
+.tile .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tile .bd{padding:10px 12px;display:grid;gap:4px;font-size:13px}
+.tile .bd b{font-size:15px}
+.tile.add{border-style:dashed;place-items:center;min-height:220px;color:var(--muted);font-weight:600;font-size:14px;background:transparent}
+.gmini{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--sunk)}
+.gmini i{display:block;height:100%}
+.gmini .A{background:var(--gA)} .gmini .B{background:var(--gB)} .gmini .C{background:var(--gC)} .gmini .D{background:var(--gD)}
+.mini{display:flex;gap:6px;flex-wrap:wrap}
+.phead{display:grid;grid-template-columns:minmax(0,260px) 1fr;gap:18px;align-items:start;margin-bottom:16px}
+.phead img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;background:var(--sunk)}
+@media (max-width:560px){.phead{grid-template-columns:1fr}}
+.inl{display:grid;gap:10px;padding:14px;border:1px dashed var(--line);border-radius:8px}
+.critgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.critgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.critgrid{grid-template-columns:1fr}}
+.gcol{border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;display:grid;align-content:start}
+.gcol.D{border:2px solid var(--gD)}
+.gcol .ex{position:relative;aspect-ratio:4/3;background:var(--sunk)}
+.gcol .ex img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.gcol .ex .src{position:absolute;left:6px;bottom:6px;font-size:11px;background:rgba(0,0,0,.6);color:#fff;padding:1px 6px;border-radius:4px}
+.gcol .gh{padding:8px 12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.gcol.A .gh{background:var(--gA-bg);color:var(--gA)} .gcol.B .gh{background:var(--gB-bg);color:var(--gB)}
+.gcol.C .gh{background:var(--gC-bg);color:var(--gC)} .gcol.D .gh{background:var(--gD-bg);color:var(--gD)}
+.checks{display:grid;gap:6px;padding:10px 12px;font-size:13.5px}
+.ck{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start}
+.ck code{font-family:var(--mono);font-size:11px;color:var(--muted);padding-top:2px;white-space:nowrap}
+.ck.hit{background:var(--gD-bg);border-radius:4px;padding:4px 6px;font-weight:600}
+.ck.hitC{background:var(--gC-bg);border-radius:4px;padding:4px 6px;font-weight:600}
+.gcol .refbtn{margin:0 12px 12px;font-size:12px;padding:5px 8px;position:relative;overflow:hidden}
+.gcol .refbtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.scrap{border-radius:8px;padding:14px;display:grid;gap:8px}
+.scrap.yes{background:var(--gD-bg);border:2px solid var(--gD)} .scrap.no{background:var(--gA-bg);border:2px solid var(--gA)}
+.scrap .t{font-size:18px;font-weight:700} .scrap.yes .t{color:var(--gD)} .scrap.no .t{color:var(--gA)}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.compare figure{margin:0;display:grid;gap:4px;font-size:12px;color:var(--muted)}
+.compare img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;background:var(--sunk)}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.vgrid>*{min-width:0}
+.vcard{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:16px;display:grid;gap:10px;align-content:start}
+.vcard h3{font-size:17px}
+.vinfo{display:grid;grid-template-columns:72px 1fr;gap:4px 10px;font-size:13.5px}
+.vinfo dt{color:var(--muted)} .vinfo dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px}
+.pc>div{border-radius:6px;padding:8px 10px;background:var(--sunk)}
+.pc ul{margin:4px 0 0;padding-left:16px}
+.pc .pro b{color:var(--gA)} .pc .con b{color:var(--gC)}
+@media (max-width:520px){.pc{grid-template-columns:1fr}}
+.rates{width:100%;min-width:0;font-size:13px} .rates td{padding:5px 6px} .rates td:last-child{text-align:right;font-family:var(--mono);white-space:nowrap}
+.rates tr.hit td{background:var(--gC-bg);font-weight:700}
+.src{font-size:12px;color:var(--muted)} .src a{color:var(--accent)}
+.hero{display:grid;gap:12px;padding-block:8px 18px}
+.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--accent);font-weight:700}
+.htitle{font-size:clamp(26px,4.4vw,42px);line-height:1.22;letter-spacing:-.02em;font-weight:700}
+.hsub{margin:0;font-size:16px;color:var(--muted);max-width:640px}
+.scene{margin:0;padding:12px;display:grid;gap:8px}
+.scenewrap{overflow-x:auto;border-radius:6px}
+#officeScene svg{display:block;width:100%;min-width:640px;height:auto}
+#officeScene .co{cursor:pointer}
+#officeScene .co:hover circle,#officeScene .co:focus circle{fill:var(--gD)}
+#officeScene .co:focus{outline:none}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+.step{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:14px;border-radius:8px;background:var(--surface);border:1px solid var(--line)}
+.step b{display:block;font-size:15px} .step span{font-size:13px;color:var(--muted)}
+.step:nth-child(3){border:2px solid var(--gD)} .step:nth-child(3) .sn{background:var(--gD)}
+.sn{width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--bg);display:grid;place-items:center;font-weight:700;font-family:var(--mono)}
+@media (max-width:820px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.steps{grid-template-columns:1fr}}
+.hstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:16px}
+.hstat{padding:14px;border-radius:8px;background:var(--surface);border:1px solid var(--line);display:grid;gap:2px}
+.hstat .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.hstat.D{border-top:4px solid var(--gD)} .hstat.C{border-top:4px solid var(--gC)} .hstat.T{border-top:4px solid var(--accent)}
+.authgate{position:fixed;inset:0;z-index:30;background:var(--bg);display:grid;place-items:center;padding:20px max(16px,env(safe-area-inset-left,0px))}
+.authbox{width:min(420px,100%);display:grid;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px}
+.authbox h2{font-size:20px}
+/* 촬영 */
+.shots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.shot{aspect-ratio:1;max-width:100%;border:1.5px dashed var(--line);border-radius:8px;display:grid;place-items:center;position:relative;overflow:hidden;background:var(--sunk);cursor:pointer;text-align:center;font-size:12px;color:var(--muted)}
+.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.shot .x{position:absolute;top:4px;right:4px;z-index:2;padding:0 7px;font-size:12px;line-height:20px;border-radius:4px}
+.shot input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.result{display:grid;gap:14px}
+.verdict{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:14px;border-radius:8px}
+.verdict.A{background:var(--gA-bg)} .verdict.B{background:var(--gB-bg)} .verdict.C{background:var(--gC-bg)} .verdict.D{background:var(--gD-bg)}
+.bigg{font-family:var(--mono);font-size:40px;font-weight:600;line-height:1;width:64px;height:64px;display:grid;place-items:center;border-radius:8px;background:var(--surface)}
+.bigg.A{color:var(--gA)} .bigg.B{color:var(--gB)} .bigg.C{color:var(--gC)} .bigg.D{color:var(--gD)}
+.defects{display:grid;gap:8px}
+.defect{border:1px solid var(--line);border-left:4px solid var(--gC);border-radius:6px;padding:10px 12px;display:grid;gap:4px;background:var(--surface)}
+.defect.심각{border-left-color:var(--gD)} .defect.경미{border-left-color:var(--gB)}
+.defect .head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:600}
+.econ{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.econ div{background:var(--sunk);border-radius:6px;padding:8px 10px}
+.econ .v{font-weight:700;font-variant-numeric:tabular-nums}
+.vendors{display:grid;gap:8px}
+.vendor{border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:grid;gap:4px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+
+/* 상세 */
+dialog{border:none;border-radius:10px;padding:0;max-width:min(760px,calc(100vw - 24px));width:100%;background:var(--surface);color:var(--fg)}
+dialog::backdrop{background:rgba(10,14,9,.55)}
+.dlg{padding:18px;display:grid;gap:14px;max-height:85vh;overflow:auto}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:var(--sunk)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 16px;font-size:14px}
+.kv b{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.crit{display:grid;gap:10px}
+.crit .c{display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:start;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.crit .c>*{min-width:0}
+.crit ul{margin:4px 0 0;padding-left:18px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:6px;font-size:14px;z-index:20}
+@media (max-width:560px){.gradebar{grid-template-columns:repeat(2,1fr)} .shots{grid-template-columns:repeat(2,1fr)} nav.tabs{margin-left:0;width:100%} nav.tabs a{padding:6px 9px}}
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="brand"><div class="mark">비품</div><div>사무비품 상태판정<small>질정분류 · 요정비 · 폐품판정</small></div></div>
+  <div id="who" hidden style="font-size:12px;opacity:.85;display:flex;gap:6px;align-items:center"><span id="whoMail"></span><button class="small ghost" id="logoutBtn" style="color:inherit;border-color:rgba(255,255,255,.3);padding:3px 8px">로그아웃</button></div>
+  <nav class="tabs" id="tabs">
+    <a href="#home">홈</a>
+    <a href="#dashboard">현황</a>
+    <a href="#inspect">촬영·판정</a>
+    <a href="#vendors">정비업체</a>
+    <a href="#criteria">판정기준</a>
+  </nav>
+</div></header>
+
+<div class="wrap"><main id="app">
+
+<!-- 홈 (메인 인포그래픽) -->
+<section id="v-home" data-view hidden>
+  <div class="hero">
+    <div class="eyebrow">사무비품 재산관리 · 질정분류 · 폐품판정</div>
+    <h1 class="htitle">AI를 적용하여 사무비품 재산관리를<br>편하게 해 보끄나!!</h1>
+    <p class="hsub">휴대폰으로 사진 한 장 찍으면 A~D급 질정분류, 요정비 부위, 폐품 여부, 정비업체와 단가까지 한 번에 나옵니다.</p>
+    <div class="row"><button class="primary" onclick="location.hash='inspect'">사진 찍어서 판정하기</button><button onclick="location.hash='dashboard'">보유 비품 현황 보기</button></div>
+  </div>
+  <figure class="scene panel">
+    <div class="scenewrap"><div id="officeScene"></div></div>
+    <figcaption class="muted">○○대대 행정반 · 사무비품 7종. 번호를 누르면 해당 품목 현황으로 이동합니다.</figcaption>
+  </figure>
+  <div class="steps">
+    <div class="step"><div class="sn">1</div><div><b>촬영·업로드</b><span>정면·측면·후면·손상부위를 휴대폰으로 찍어 올립니다.</span></div></div>
+    <div class="step"><div class="sn">2</div><div><b>AI 질정분류</b><span>품목별 기준 항목에 하나씩 대조해 A~D급을 정합니다.</span></div></div>
+    <div class="step"><div class="sn">3</div><div><b>폐품 자동판정</b><span>D급 기준 또는 공통 폐품기준에 해당하면 폐품으로 판정합니다.</span></div></div>
+    <div class="step"><div class="sn">4</div><div><b>정비 연결</b><span>정비 부위·방법·단가와 서울·경기 정비업체를 보여줍니다.</span></div></div>
+  </div>
+  <div class="hstats" id="homeStats"></div>
+</section>
+
+<!-- 현황 -->
+<section id="v-dashboard" data-view>
+  <div class="row" style="justify-content:space-between">
+    <div><h1>보유 비품 현황</h1><div class="muted" style="font-size:14px">품목 → 제품 종류 → 개별 비품 순서로 들어가 사진과 상태를 확인합니다.</div></div>
+    <button class="primary" onclick="location.hash='inspect'">+ 사진 촬영해서 판정</button>
+  </div>
+  <div id="dbNote" class="notice" hidden></div>
+  <div class="gradebar" id="gradebar" style="margin-top:14px"></div>
+  <div class="panel" style="margin-top:14px">
+    <div class="kpis" id="kpis"></div>
+  </div>
+  <div class="panel" style="margin-top:14px;display:grid;gap:12px">
+    <div class="row" style="justify-content:space-between">
+      <nav class="crumbs" id="crumbs" aria-label="위치"></nav>
+      <div class="filters">
+        <input id="q" placeholder="제조사·모델·부대 검색">
+        <select id="fVerdict"><option value="">전체 판정</option><option>사용</option><option>요정비</option><option>폐품</option></select>
+        <select id="sort"><option value="createdAt">최근 등록순</option><option value="price">단가 높은순</option><option value="repairCost">정비비 높은순</option><option value="grade">등급순</option></select>
+      </div>
+    </div>
+    <div id="browse"></div>
+  </div>
+</section>
+
+<!-- 촬영·판정 -->
+<section id="v-inspect" data-view hidden>
+  <h1>촬영·판정</h1>
+  <div class="muted" style="font-size:14px;margin-bottom:14px">휴대폰으로 사진을 찍어 올리면 AI가 등급(A~D), 요정비 부위, 폐품 여부를 판정합니다. 결과는 담당자가 확인·수정한 뒤 저장합니다.</div>
+  <div class="grid2">
+    <div class="panel" style="display:grid;gap:16px;align-content:start">
+      <div><div class="label">1. 비품 정보</div></div>
+      <div class="form">
+        <label class="f">품목<select id="i-cat"></select></label>
+        <label class="f">제품 종류 (제조사·모델)<select id="i-prod"></select></label>
+        <label class="f">관리번호 / 시리얼<input id="i-serial" placeholder="예: 24-가구-0153"></label>
+        <label class="f">사용 부대<input id="i-unit" placeholder="예: ○○대대 본부"></label>
+        <label class="f">계약번호<input id="i-contract" placeholder="예: 2024-조달-0412"></label>
+        <label class="f">취득일<input id="i-date" type="date"></label>
+        <label class="f">취득단가(원)<input id="i-price" type="number" min="0" step="1000" inputmode="numeric"></label>
+        <label class="f">내용연수(년)<input id="i-life" type="number" min="1" max="30"></label>
+      </div>
+      <label class="f">사용자 메모 (증상)<textarea id="i-memo" placeholder="예: 서랍 레일 걸림, 의자 높이 조절 안 됨"></textarea></label>
+      <div>
+        <div class="label" style="margin-bottom:8px">2. 사진 (최대 4장 · 정면/측면/후면/손상부위)</div>
+        <div class="shots" id="shots"></div>
+      </div>
+      <div class="row">
+        <button class="primary" id="analyzeBtn">AI 자동 분석</button>
+        <button class="ghost" id="resetBtn">새로 작성</button>
+        <span id="anStatus" class="muted" style="font-size:13px"></span>
+      </div>
+      <div id="aiNote" class="notice" hidden></div>
+    </div>
+
+    <div class="panel" style="display:grid;gap:14px;align-content:start">
+      <div class="label">3. 판정 결과</div>
+      <div id="result" class="result"><div class="empty">사진을 올리고 <b>AI 자동 분석</b>을 누르면 여기에 결과가 나옵니다.<br>AI를 쓸 수 없을 때는 아래에서 직접 등급을 정해 저장할 수 있습니다.</div></div>
+      <div style="display:grid;gap:10px;border-top:1px solid var(--line);padding-top:14px">
+        <div class="label">담당자 확인</div>
+        <div class="form">
+          <label class="f">최종 등급<select id="o-grade"><option value="">선택</option><option value="A">A급</option><option value="B">B급</option><option value="C">C급</option><option value="D">D급</option></select></label>
+          <label class="f">최종 판정<select id="o-verdict"><option value="">선택</option><option>사용</option><option>요정비</option><option>폐품</option></select></label>
+          <label class="f">예상정비비(원)<input id="o-cost" type="number" min="0" step="1000"></label>
+        </div>
+        <div class="row"><button class="primary" id="saveBtn">판정 결과 저장</button><span id="saveStatus" class="muted" style="font-size:13px"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 정비업체 -->
+<section id="v-vendors" data-view hidden>
+  <h1>정비업체 (서울·경기)</h1>
+  <div class="muted" style="font-size:14px;margin-bottom:10px">업체 홈페이지에 공개된 정보로 정리했습니다. 단가는 업체가 공개한 표준 견적이며 현장에 따라 달라집니다. 판정 결과 화면에서 품목에 맞는 업체를 자동으로 추천합니다.</div>
+  <div class="filters" style="margin-bottom:12px">
+    <select id="vfRegion"><option value="">서울·경기 전체</option><option value="서울">서울 출장 가능</option><option value="경기">경기 출장 가능</option></select>
+    <select id="vfCat"><option value="">전체 품목</option></select>
+    <button class="primary small" id="vAddBtn">+ 업체 추가</button>
+  </div>
+  <div id="vendorList" class="vgrid"></div>
+  <div class="panel" id="vForm" hidden style="margin-top:14px;display:grid;gap:12px">
+    <h2>업체 추가</h2>
+    <div class="form">
+      <label class="f">업체명<input id="v-name"></label><label class="f">전화번호<input id="v-phone"></label>
+      <label class="f">주소<input id="v-addr" placeholder="예: 서울 ○○구 ○○로 00"></label><label class="f">출장 지역<input id="v-region" placeholder="예: 서울 전역, 경기 남부"></label>
+      <label class="f">출장비<input id="v-trip" placeholder="예: 30,000~50,000원"></label><label class="f">영업시간<input id="v-hours"></label>
+      <label class="f">A/S 보증<input id="v-warranty" placeholder="예: 30일"></label><label class="f">홈페이지<input id="v-url" placeholder="https://"></label>
+    </div>
+    <div class="label">정비 가능 품목</div>
+    <div id="v-cats" class="row" style="gap:6px 12px;font-size:14px"></div>
+    <label class="f">특성<textarea id="v-feature" placeholder="어떤 정비를 주로 하는 업체인지"></textarea></label>
+    <div class="form"><label class="f">장점 (한 줄에 하나)<textarea id="v-pros"></textarea></label><label class="f">확인할 점·단점 (한 줄에 하나)<textarea id="v-cons"></textarea></label></div>
+    <label class="f">기술력 근거 (경력, 인력, 실적 등)<textarea id="v-tech"></textarea></label>
+    <label class="f">정비 단가표 (한 줄에 "작업명, 금액")<textarea id="v-rates" placeholder="서랍 레일 교체, 35000&#10;의자 캐스터 5개, 20000"></textarea></label>
+    <div class="row"><button class="primary" id="vSave">업체 저장</button><button class="ghost" id="vCancel">취소</button><span id="vStatus" class="muted" style="font-size:13px"></span></div>
+  </div>
+</section>
+
+<!-- 판정기준 -->
+<section id="v-criteria" data-view hidden>
+  <div class="row" style="justify-content:space-between">
+    <div><h1>품목별 질정분류·폐품 판정기준 <span class="tag">초안 · 부대 규정에 맞게 수정</span></h1>
+    <div class="muted" style="font-size:14px">사진을 올리면 AI가 아래 기준 항목에 하나씩 대조합니다. <b>D급 항목이 하나라도 해당하면 자동으로 폐품</b>으로 판정합니다.</div></div>
+  </div>
+  <div class="cats" id="critCats" style="margin-top:14px"></div>
+  <div class="critgrid" id="critGrid" style="margin-top:14px"></div>
+  <div class="panel scrapbox" style="margin-top:14px;display:grid;gap:8px">
+    <h2>공통 폐품기준 (모든 품목에 자동 적용)</h2>
+    <div id="commonCrit" class="checks"></div>
+    <div class="muted" style="font-size:13px">잔존가치 = 취득단가 × max(10%, 1 − 경과연수 ÷ 내용연수). 자동 판정 뒤에도 담당자가 확인하고 바꿀 수 있습니다.</div>
+    <div class="label" style="margin-top:6px">품목별 내용연수 초기값 (참고용)</div>
+    <div class="tablewrap"><table style="min-width:0" id="lifeTbl"></table></div>
+  </div>
+</section>
+
+</main></div>
+
+<div id="authGate" class="authgate" hidden>
+  <form class="authbox" id="authForm">
+    <div class="eyebrow">사무비품 재산관리</div>
+    <h2>AI를 적용하여 사무비품 재산관리를 편하게 해 보끄나!!</h2>
+    <div class="muted" style="font-size:14px">부대 담당자 계정으로 로그인하세요.</div>
+    <label class="f">이메일<input id="authEmail" type="email" autocomplete="username" required></label>
+    <label class="f">비밀번호<input id="authPw" type="password" autocomplete="current-password" minlength="6" required></label>
+    <div class="row"><button class="primary" type="submit">로그인</button><button type="button" class="ghost" id="authSignup">처음이면 가입</button></div>
+    <div id="authMsg" class="muted" style="font-size:13px" aria-live="polite"></div>
+  </form>
+</div>
+<dialog id="dlg"><div class="dlg" id="dlgBody"></div></dialog>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+const CFG = window.APP_CONFIG || {};
+const IN_CLAUDE = typeof window.claude !== "undefined";
+const SUPA = !IN_CLAUDE && !!(CFG.supabaseUrl && CFG.supabaseAnonKey && window.supabase);
+const LOCAL = !IN_CLAUDE;            // claude.ai 밖 (로컬 파일 또는 Vercel 배포)
+let sbClient = null;
+const DEFAULT_CATS = {"책상":10,"의자":8,"옷장":10,"서류함":12,"티테이블":10,"파티션":10,"책장":12};
+let CATS = {...DEFAULT_CATS};
+const catNames = () => Object.keys(CATS);
+const GRADES = {
+  A:{name:"A급 · 신품급",verdict:"사용",desc:"외관·기능 모두 정상. 사용 흔적이 거의 없음.",items:["외관 긁힘·변색 없음","모든 기능 정상 작동","부속품 완비"]},
+  B:{name:"B급 · 사용가능",verdict:"사용",desc:"경미한 사용 흔적이 있으나 기능은 정상.",items:["작은 긁힘·생활 마모","기능 정상, 정비 불필요","소모품 교체 정도만 필요"]},
+  C:{name:"C급 · 요정비",verdict:"요정비",desc:"기능 이상이나 부품 손상이 있지만 수리하면 사용 가능.",items:["부품 파손·작동 불량","정비비가 잔존가치보다 낮음","정비 후 B급 복귀 가능"]},
+  D:{name:"D급 · 폐품",verdict:"폐품",desc:"수리가 불가능하거나 수리비가 잔존가치를 넘음.",items:["본체 파손·부식·소손","핵심부품 단종 또는 수리 불가","정비비 ≥ 잔존가치 (비경제적)"]}
+};
+/* 품목별 판정기준: [코드, 사진으로 확인할 형상 기준] — 초안, 부대 규정에 맞게 수정 */
+const CRITERIA = {
+ "책상":{A:[["상판 긁힘·찍힘·얼룩 없음"],["엣지(모서리 마감재) 들뜸 없음"],["서랍 개폐·잠금 정상"],["다리·프레임 흔들림 없음"]],
+  B:[["상판 생활 긁힘(길이 10cm 미만) 또는 가벼운 오염"],["엣지 부분 변색, 들뜸 없음"],["서랍 개폐가 약간 뻑뻑하나 사용 가능"]],
+  C:[["서랍 레일 휨·이탈, 손잡이 파손"],["엣지 들뜸·부분 탈락"],["상판 찍힘·패임(보수 가능 크기)"],["조절발 분실, 다리 흔들림(볼트 체결로 보수 가능)"]],
+  D:[["상판 갈라짐·관통 파손"],["상판 수분 팽창(부풀음)·내부재(PB) 노출"],["다리·프레임 휨 또는 용접부 파단"],["서랍 몸체 파손으로 본체 구조 변형"],["곰팡이·부식이 표면 30% 이상"]]},
+ "의자":{A:[["시트·등받이 찢김·오염 없음"],["높이·틸트 조절 정상"],["바퀴 5개 모두 정상"]],
+  B:[["패브릭 보풀·가벼운 오염"],["팔걸이 패드 마모"],["바퀴 소음, 구름 정상"]],
+  C:[["가스실린더 고장(높이 고정 안 됨)"],["바퀴 1~2개 파손·분실"],["팔걸이 파손·흔들림"],["시트 커버 찢김 10cm 미만"]],
+  D:[["베이스(5발 다리) 균열·파단"],["등받이 프레임 파손·분리"],["시트 쿠션 함몰 또는 커버 찢김이 면적 30% 이상"],["메쉬 등받이 관통 찢어짐"],["철제 부위 부식으로 강도 저하"]]},
+ "옷장":{A:[["문짝·본체 긁힘 없음"],["문 개폐·잠금 정상"],["옷봉·선반 정상"]],
+  B:[["외관 생활 긁힘·변색"],["문 닫힘 시 약간 어긋남"]],
+  C:[["경첩 처짐으로 문 닫힘 불량"],["손잡이·잠금장치 파손"],["옷봉 이탈·선반 받침 분실"]],
+  D:[["측판·하판 갈라짐 또는 수분 팽창"],["철제 몸체 찌그러짐으로 문 닫힘 불가"],["문짝 2개 이상 파손 또는 뒤판 탈락"],["본체 뒤틀림으로 전도 위험"],["부식 관통(녹으로 구멍)"]]},
+ "서류함":{A:[["몸체·서랍 찌그러짐 없음"],["서랍 개폐·잠금 정상"],["도장 상태 양호"]],
+  B:[["도장 생활 긁힘"],["서랍 개폐 약간 뻑뻑"]],
+  C:[["서랍 레일 이탈·잠금장치 고장"],["손잡이 파손"],["도장 벗겨짐·표면 녹(부분)"],["이동식 바퀴 1개 파손"]],
+  D:[["몸체 찌그러짐으로 서랍 개폐 불가"],["부식 관통(녹으로 구멍)"],["몸체 뒤틀림으로 전도 위험"],["이동식 바퀴 브래킷 파단"]]},
+ "티테이블":{A:[["상판 긁힘·얼룩 없음"],["다리 흔들림 없음"]],
+  B:[["상판 생활 긁힘·컵 자국"],["엣지 부분 변색"]],
+  C:[["상판 코팅 손상·얼룩(연마로 보수 가능)"],["다리 흔들림(볼트 체결로 보수 가능)"],["엣지 탈락"]],
+  D:[["상판 갈라짐·파손"],["다리·베이스 파단 또는 용접부 균열"],["유리 상판 금감·깨짐"],["상판 수분 팽창·내부재 노출"]]},
+ "파티션":{A:[["패브릭·프레임 손상 없음"],["자립·연결 정상"]],
+  B:[["패브릭 가벼운 오염·보풀"],["프레임 생활 긁힘"]],
+  C:[["패브릭 부분 찢김·오염"],["연결 브래킷 파손"],["받침발 분실"]],
+  D:[["프레임 휨·파단으로 자립 불가"],["유리 패널 금감·깨짐"],["패널 내부재 노출·변형(면적 30% 이상)"]]},
+ "책장":{A:[["측판·선반 긁힘 없음"],["선반 처짐 없음"],["문짝 정상(도어형)"]],
+  B:[["외관 생활 긁힘"],["선반 약간 처짐(1cm 미만)"]],
+  C:[["선반 받침 분실·선반 처짐"],["문짝 경첩 불량"],["뒤판 일부 들뜸"]],
+  D:[["측판·선반 갈라짐 또는 수분 팽창"],["본체 뒤틀림으로 전도 위험"],["뒤판 탈락으로 구조 불안정"]]}
+};
+const COMMON_SCRAP=[["X-1","예상정비비가 잔존가치 이상 (수리 비경제)"],["X-2","내용연수가 지났고 요정비(C급) 부위가 2곳 이상"],["X-3","정비에 필요한 부품 단종 등으로 수리 불가 (담당자 확인)"]];
+const CAT_CODE={"책상":"DK","의자":"CH","옷장":"WR","서류함":"FC","티테이블":"TT","파티션":"PT","책장":"BS"};
+function critFor(cat){
+  const c=CRITERIA[cat]||{A:[["외관·기능 정상"]],B:[["경미한 생활 마모, 기능 정상"]],C:[["부품 파손·작동 불량, 수리 가능"]],D:[["본체 파손·부식·변형으로 사용 불가"]]};
+  const code=CAT_CODE[cat]||"ET"; const out={};
+  for(const g of ["A","B","C","D"]) out[g]=(c[g]||[]).map((x,k)=>({code:`${code}-${g}${k+1}`,text:x[0]}));
+  return out;
+}
+const won = n => (n==null||isNaN(n)) ? "–" : Math.round(n).toLocaleString("ko-KR")+"원";
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = id => document.getElementById(id);
+function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>el.hidden=true,2600)}
+function ageYears(d){ if(!d) return 0; const ms=Date.now()-new Date(d).getTime(); return Math.max(0, ms/(365.25*864e5)); }
+function residual(price,date,life){ if(!price) return null; const r=Math.max(0.1,1-ageYears(date)/(life||7)); return price*r; }
+function placeholder(cat){ return illus(cat,0); }
+function prodPhoto(p){ return p ? (p.photo || illus(p.category,p.variant||0)) : null; }
+/* 품목별 제품 그림 (사진이 없을 때 대신 표시) */
+function illus(cat,v){
+  v=Number(v)||0;
+  const wood=["#c89b6d","#e8e4dc","#8b9096","#6e5240","#d9c3a0"][v%5], dark=["#2d3135","#4a5a6a","#5b4636","#3a3a3a"][v%4];
+  const bgs={"책상":"#e4e1d8","의자":"#dde2e6","옷장":"#e6e2dc","서류함":"#dfe3e0","티테이블":"#e7e2d9","파티션":"#dee2dc","책장":"#e5e0d8"};
+  const R=(x,y,w,h,f,ex="")=>`<rect x='${x}' y='${y}' width='${w}' height='${h}' fill='${f}' ${ex}/>`;
+  const st="stroke='#00000033' stroke-width='2'";
+  let g="";
+  if(cat==="책상"){
+    if(v%4===0){ g=R(60,110,280,16,wood,st)+R(72,126,12,110,dark)+R(316,126,12,110,dark)+R(84,150,232,6,dark); }
+    else if(v%4===1){ g=R(50,105,300,16,wood,st)+R(60,121,12,115,dark)+R(240,121,100,115,wood,st)+[0,1,2].map(k=>R(248,130+k*36,84,28,"#ffffff22",st)+R(282,142+k*36,16,4,dark)).join(""); }
+    else if(v%4===2){ g=`<polygon points='30,130 230,130 250,105 370,105 350,130 350,146 30,146' fill='${wood}' ${st}/>`+R(40,146,12,95,dark)+R(330,146,12,95,dark)+R(355,121,10,90,dark); }
+    else { g=R(60,95,280,16,wood,st)+R(104,111,16,110,dark)+R(80,221,64,10,dark)+R(280,111,16,110,dark)+R(256,221,64,10,dark)+R(130,125,30,10,"#4a8")+`<text x='145' y='134' font-size='8' text-anchor='middle' fill='#fff'>▲▼</text>`; }
+  } else if(cat==="의자"){
+    const c=["#2d3135","#3d5a80","#7a2e2e","#4d4d4d"][v%4];
+    if(v%4===2){ g=R(140,70,120,90,c,"rx='10'")+R(130,160,140,22,c,"rx='6'")+R(140,182,10,70,"#888")+R(250,182,10,70,"#888")+R(170,182,8,60,"#aaa")+R(222,182,8,60,"#aaa"); }
+    else { const h=v%4===1?70:120, y=160-h; g=R(150,y,100,h,c,"rx='14'")+(v%4===0?Array.from({length:6},(_,k)=>`<line x1='${160+k*16}' y1='${y+8}' x2='${160+k*16}' y2='${y+h-8}' stroke='#ffffff30'/>`).join(""):"")
+      +(v%4===3?R(118,140,14,40,c,"rx='5'")+R(268,140,14,40,c,"rx='5'"):"")+R(132,160,136,24,c,"rx='8'")+R(195,184,10,46,"#777")+`<path d='M200 232 L140 252 M200 232 L260 252 M200 232 L200 258 M200 232 L165 262 M200 232 L235 262' stroke='#666' stroke-width='6' stroke-linecap='round'/>`; }
+  } else if(cat==="옷장"){
+    const n=[2,3,0][v%3];
+    if(n){ const w=n*80; const x=200-w/2; g=R(x,30,w,240,wood,st)+Array.from({length:n},(_,k)=>R(x+k*80,30,80,240,"none",st)+R(x+k*80+(k%2?10:62),130,6,40,dark)).join("")+R(x,262,w,10,dark); }
+    else { g=[0,1,2].map(c=>[0,1].map(r=>R(110+c*62,40+r*112,58,108,"#9aa5ad",st)+[0,1,2].map(k=>R(124+c*62,56+r*112+k*7,30,3,"#6b767e")).join("")+R(158+c*62,90+r*112,6,14,"#444")).join("")).join(""); }
+  } else if(cat==="서류함"){
+    const m=["#bfc5c9","#e8e4dc","#5b6670","#8b9096"][v%4];
+    if(v%4===3){ g=R(110,40,180,230,m,st)+R(110,40,90,230,"none",st)+R(190,140,6,30,"#333")+R(204,140,6,30,"#333"); }
+    else { const n=v%4===1?4:3, h=v%4===2?120:(n===4?220:160), y=270-h-(v%4===2?20:0); g=R(130,y,140,h,m,st)+Array.from({length:n},(_,k)=>R(136,y+6+k*(h-12)/n,128,(h-12)/n-6,"#ffffff25",st)+R(185,y+6+k*(h-12)/n+((h-12)/n-6)/2-3,30,6,"#555")).join("")+(v%4===2?`<circle cx='145' cy='${y+h+8}' r='8' fill='#333'/><circle cx='255' cy='${y+h+8}' r='8' fill='#333'/>`:""); }
+  } else if(cat==="티테이블"){
+    if(v%3===0){ g=`<ellipse cx='200' cy='120' rx='120' ry='26' fill='${wood}' ${st}/>`+R(192,134,16,100,dark)+`<ellipse cx='200' cy='240' rx='60' ry='12' fill='${dark}'/>`; }
+    else if(v%3===1){ g=R(90,110,220,16,wood,st)+R(100,126,10,110,dark)+R(290,126,10,110,dark)+R(130,126,8,96,"#555")+R(262,126,8,96,"#555"); }
+    else { g=R(70,170,260,18,wood,st)+R(80,188,240,8,"#00000020")+R(84,188,14,50,dark)+R(302,188,14,50,dark)+R(110,205,180,6,dark); }
+  } else if(cat==="파티션"){
+    const f=["#7d8b77","#5d6f86","#a08a6a"][v%3];
+    if(v%3===2){ g=[0,1,2].map(k=>R(50+k*102,70,98,180,f,st)+R(50+k*102,70,98,8,"#999")).join("")+R(50,250,302,8,"#777"); }
+    else { g=R(90,v%3===1?120:60,220,v%3===1?130:190,f,st)+(v%3===1?R(90,40,220,80,"#bcd6e6aa",st):"")+R(84,40,8,214,"#999")+R(308,40,8,214,"#999")+R(70,252,46,8,"#777")+R(284,252,46,8,"#777"); }
+  } else if(cat==="책장"){
+    const n=v%3===1?5:3, h=n===5?240:170, y=270-h, w=v%3===1?140:200, x=200-w/2;
+    g=R(x,y,w,h,wood,st)+Array.from({length:n},(_,k)=>{const sy=y+8+k*(h-16)/n, sh=(h-16)/n-8;
+      if(v%3===2&&k===n-1) return R(x+8,sy,w/2-10,sh,wood,st)+R(x+w/2+2,sy,w/2-10,sh,wood,st);
+      return R(x+8,sy,w-16,sh,"#00000018")+Array.from({length:Math.floor((w-30)/16)},(_,b)=>R(x+14+b*16,sy+sh-(18+((b*7+k*5)%14)),12,18+((b*7+k*5)%14),["#7b4b3a","#3d5a80","#6a8a5a","#c09040","#555"][(b+k)%5])).join("");}).join("");
+  } else { g=R(120,90,160,120,"#9aa094",st)+`<text x='200' y='158' font-size='28' text-anchor='middle' fill='#fff' font-family='sans-serif'>${esc(String(cat||"").slice(0,4))}</text>`; }
+  return "data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect width='400' height='300' fill='${bgs[cat]||"#e2e3df"}'/><ellipse cx='200' cy='272' rx='150' ry='10' fill='#0000001a'/>${g}${arguments[2]||""}</svg>`);
+}
+/* 등급별 형상 예시 그림: 손상 위치를 표시 (실제 기준사진을 등록하면 그 사진으로 바뀜) */
+const DMG_AT={"책상":{C:[290,170,"서랍 레일 이탈"],D:[170,118,"상판 갈라짐"]},"의자":{C:[200,205,"실린더 고장"],D:[200,240,"베이스 파단"]},
+  "옷장":{C:[160,150,"경첩 처짐"],D:[200,230,"하판 팽창"]},"서류함":{C:[200,170,"서랍 이탈"],D:[200,140,"몸체 찌그러짐"]},
+  "티테이블":{C:[200,120,"코팅 손상"],D:[200,180,"기둥 파단"]},"파티션":{C:[200,150,"패브릭 찢김"],D:[120,150,"프레임 휨"]},"책장":{C:[200,170,"선반 처짐"],D:[200,150,"측판 갈라짐"]}};
+function gradeIllus(cat,g,v){
+  const at=(DMG_AT[cat]||{})[g]||[200,150,""]; const [x,y,t]=at; let o="";
+  if(g==="B"){ o=`<g stroke='#00000055' stroke-width='1.5'><line x1='${x-40}' y1='${y-30}' x2='${x-22}' y2='${y-26}'/><line x1='${x+10}' y1='${y-34}' x2='${x+30}' y2='${y-30}'/><line x1='${x-10}' y1='${y-20}' x2='${x+4}' y2='${y-17}'/></g>`; }
+  if(g==="C"){ o=`<circle cx='${x}' cy='${y}' r='34' fill='none' stroke='#d08a00' stroke-width='4' stroke-dasharray='8 5'/><rect x='${Math.max(4,Math.min(x-70,256))}' y='${y+38>262?y-70:y+38}' width='140' height='24' rx='4' fill='#d08a00'/><text x='${Math.max(4,Math.min(x-70,256))+70}' y='${(y+38>262?y-70:y+38)+16}' font-size='13' text-anchor='middle' fill='#fff' font-family='sans-serif' font-weight='700'>${t}</text>`; }
+  if(g==="D"){ o=`<path d='M${x-36} ${y-6} l10 8 l8 -10 l10 12 l9 -9 l10 11 l9 -8' fill='none' stroke='#c0281e' stroke-width='4' stroke-linejoin='round'/><circle cx='${x}' cy='${y}' r='40' fill='#c0281e22' stroke='#c0281e' stroke-width='4'/><rect x='${Math.max(4,Math.min(x-70,256))}' y='${y+44>262?y-76:y+44}' width='140' height='24' rx='4' fill='#c0281e'/><text x='${Math.max(4,Math.min(x-70,256))+70}' y='${(y+44>262?y-76:y+44)+16}' font-size='13' text-anchor='middle' fill='#fff' font-family='sans-serif' font-weight='700'>${t}</text>`; }
+  return illus(cat,v||0,o);
+}
+let refs={}; // 기준 사진: key "품목|등급" → dataURL
+function refPhoto(cat,g){ return refs[cat+"|"+g]||null; }
+
+/* ---------- routing ---------- */
+const VIEWS=["home","dashboard","inspect","vendors","criteria"];
+function route(){
+  const h=(location.hash||"#home").slice(1); const v=VIEWS.includes(h)?h:"home";
+  document.querySelectorAll("[data-view]").forEach(s=>s.hidden = s.id!=="v-"+v);
+  document.querySelectorAll("#tabs a").forEach(a=>a.toggleAttribute("aria-current",a.getAttribute("href")==="#"+v) || a.removeAttribute("aria-current"));
+  document.querySelectorAll("#tabs a").forEach(a=>{ if(a.getAttribute("href")==="#"+v) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
+  window.scrollTo(0,0);
+}
+addEventListener("hashchange",route);
+
+/* ---------- state ---------- */
+let items=[], vendors=[], products=[], db=null, me=null, gradeFilter="", bCat="", bProd="";
+
+/* ---------- dashboard ---------- */
+function renderDashboard(){
+  const counts={A:0,B:0,C:0,D:0}, sums={A:0,B:0,C:0,D:0};
+  items.forEach(i=>{ if(counts[i.grade]!=null){counts[i.grade]++; sums[i.grade]+=Number(i.price)||0;} });
+  $("gradebar").innerHTML=Object.keys(GRADES).map(g=>`<button class="gstat ${g}" data-g="${g}" aria-pressed="${gradeFilter===g}">
+    <span class="g">${GRADES[g].name}</span><span class="n">${counts[g]}</span><span class="s">취득가 ${won(sums[g])}</span></button>`).join("");
+  $("gradebar").querySelectorAll("button").forEach(b=>b.onclick=()=>{gradeFilter = gradeFilter===b.dataset.g?"":b.dataset.g; renderDashboard();});
+  const total=items.reduce((a,i)=>a+(Number(i.price)||0),0);
+  const resid=items.reduce((a,i)=>a+(residual(i.price,i.acquiredAt,i.lifeYears)||0),0);
+  const repair=items.filter(i=>i.verdict==="요정비").reduce((a,i)=>a+(Number(i.repairCost)||0),0);
+  const scrap=items.filter(i=>i.verdict==="폐품").length;
+  $("kpis").innerHTML=[
+    ["총 보유",items.length+"점"],["총 취득가",won(total)],["현재 잔존가치",won(resid)],
+    ["요정비 예상비용",won(repair)],["폐품 판정",scrap+"점"]
+  ].map(([k,v])=>`<div class="kpi"><div class="label">${k}</div><div class="v">${v}</div></div>`).join("");
+
+  const q=$("q").value.trim().toLowerCase(), fv=$("fVerdict").value, so=$("sort").value;
+  const match=i=>(!gradeFilter||i.grade===gradeFilter)&&(!fv||i.verdict===fv)&&(!q||[i.category,i.maker,i.model,i.unit,i.contract,i.serial].join(" ").toLowerCase().includes(q));
+  const gOrd={A:1,B:2,C:3,D:4};
+  const sorter=(a,b)=> so==="price"?(b.price||0)-(a.price||0): so==="repairCost"?(b.repairCost||0)-(a.repairCost||0): so==="grade"?(gOrd[b.grade]||0)-(gOrd[a.grade]||0): (b.createdAt||0)-(a.createdAt||0);
+  const gm=list=>{const n=list.length||1;return `<div class="gmini" title="등급 분포">${["A","B","C","D"].map(g=>{const c=list.filter(i=>i.grade===g).length;return c?`<i class="${g}" style="width:${c/n*100}%"></i>`:""}).join("")}</div>`};
+  const chips=list=>`<div class="mini">${["A","B","C","D"].map(g=>{const c=list.filter(i=>i.grade===g).length;return c?`<span class="pill ${g}">${g} ${c}</span>`:""}).join("")||'<span class="muted">보유 없음</span>'}</div>`;
+  const prod=bProd&&products.find(x=>x.id===bProd);
+  // breadcrumb
+  $("crumbs").innerHTML=`<button data-l="0">전체 품목</button>`+(bCat?` › ${prod?`<button data-l="1">${esc(bCat)}</button> › <span class="cur">${esc(prod.maker)} ${esc(prod.model)}</span>`:`<span class="cur">${esc(bCat)}</span>`}`:"");
+  $("crumbs").querySelectorAll("button").forEach(b=>b.onclick=()=>{ if(b.dataset.l==="0"){bCat="";bProd="";} else bProd=""; renderDashboard(); });
+  const B=$("browse");
+  if(!bCat){
+    // 1단계: 품목 타일
+    B.innerHTML=`<div class="tiles">${catNames().map(c=>{const ps=products.filter(x=>x.category===c), its=items.filter(i=>i.category===c&&match(i));
+      return `<button class="tile" data-c="${esc(c)}"><div class="ph"><img alt="${esc(c)}" src="${esc(prodPhoto(ps[0])||illus(c,0))}"></div>
+      <div class="bd"><b>${esc(c)}</b><span class="muted">제품 ${ps.length}종 · 보유 ${its.length}점</span>${gm(its)}</div></button>`}).join("")}
+      <button class="tile add" id="addCatBtn">+ 품목 추가</button></div>
+      <div class="inl" id="addCatForm" hidden style="margin-top:14px"><b>새 품목 추가</b>
+        <div class="form"><label class="f">품목명<input id="nc-name" placeholder="예: 소파"></label><label class="f">내용연수(년)<input id="nc-life" type="number" min="1" value="10"></label></div>
+        <div class="row"><button class="primary" id="nc-save">추가</button><button class="ghost" id="nc-cancel">취소</button><span id="nc-msg" class="muted" style="font-size:13px"></span></div></div>`;
+    B.querySelectorAll(".tile[data-c]").forEach(t=>t.onclick=()=>{bCat=t.dataset.c;bProd="";renderDashboard();window.scrollTo(0,0);});
+    $("addCatBtn").onclick=()=>{$("addCatForm").hidden=false;$("nc-name").focus();};
+    $("nc-cancel").onclick=()=>{$("addCatForm").hidden=true;};
+    $("nc-save").onclick=async()=>{const n=$("nc-name").value.trim(),l=Number($("nc-life").value)||10;
+      if(!n){$("nc-msg").textContent="품목명을 입력하세요.";return;} if(CATS[n]){$("nc-msg").textContent="이미 있는 품목입니다.";return;}
+      if(!db){$("nc-msg").textContent="저장소에 연결되지 않았습니다.";return;}
+      try{await db.collection("categories").add({name:n,life:l,createdAt:Date.now()});toast(n+" 품목을 추가했습니다");}catch(e){$("nc-msg").textContent="추가하지 못했습니다. 권한을 확인하세요.";}};
+  } else if(!prod){
+    // 2단계: 제품 종류(제조사·모델별)
+    const ps=products.filter(x=>x.category===bCat);
+    B.innerHTML=`<div class="tiles">${ps.map(x=>{const its=items.filter(i=>i.productId===x.id&&match(i));
+      return `<button class="tile" data-p="${esc(x.id)}"><div class="ph"><img alt="${esc(x.model)}" src="${esc(prodPhoto(x))}"></div>
+      <div class="bd"><b>${esc(x.model)} ${x.example?'<span class="tag">예시</span>':""}</b><span class="muted">${esc(x.maker)} · ${esc(x.spec||"")}</span>${x.material?`<span class="muted">${esc(x.material)}</span>`:""}
+      <div class="row" style="justify-content:space-between"><span class="mono">${won(x.price)}</span><span class="muted">보유 ${its.length}점</span></div>${chips(its)}</div></button>`}).join("")}
+      <button class="tile add" id="addProdBtn">+ ${esc(bCat)} 제품 종류 추가</button></div>`;
+    B.querySelectorAll(".tile[data-p]").forEach(t=>t.onclick=()=>{bProd=t.dataset.p;renderDashboard();window.scrollTo(0,0);});
+    $("addProdBtn").onclick=()=>openProductForm(bCat);
+  } else {
+    // 3단계: 해당 제품의 개별 비품
+    const its=items.filter(i=>i.productId===prod.id&&match(i)).sort(sorter);
+    B.innerHTML=`<div class="phead"><img alt="${esc(prod.model)}" src="${esc(prodPhoto(prod))}">
+      <div style="display:grid;gap:8px;min-width:0"><h2>${esc(prod.maker)} ${esc(prod.model)} ${prod.example?'<span class="tag">예시</span>':""}</h2>
+      <div class="kv"><div><b>품목</b>${esc(prod.category)}</div><div><b>규격</b>${esc(prod.spec||"–")}</div><div><b>색상·재질</b>${esc(prod.material||"–")}</div><div><b>조달단가</b>${won(prod.price)}</div><div><b>내용연수</b>${CATS[prod.category]||"–"}년</div><div><b>보유</b>${its.length}점</div></div>
+      ${chips(its)}<div><button class="primary small" id="inspThis">+ 이 제품 촬영해서 판정</button></div></div></div>
+      <div class="cards">${its.length?its.map(i=>`<button class="card" data-id="${esc(i.id)}">
+      <div class="ph"><img alt="${esc(i.serial||i.model)} 사진" src="${esc((i.photos&&i.photos[0])||prodPhoto(prod))}">
+      ${i.grade?`<span class="pill ${i.grade}">${i.grade}급 · ${esc(i.verdict)}</span>`:'<span class="pill N">미판정</span>'}
+      ${i.photos?.length>1?`<span class="cnt">📷 ${i.photos.length}</span>`:""}</div>
+      <div class="bd"><b>${esc(i.serial||"관리번호 없음")}</b><span class="muted">${esc(i.unit||"")} · 취득 ${esc(i.acquiredAt||"–")}</span>
+      <div class="ft"><span class="mono">${won(i.price)}</span>${i.repairCost?`<span style="color:var(--gC);font-size:12px">정비 ${won(i.repairCost)}</span>`:""}</div></div></button>`).join("")
+      :`<div class="empty" style="grid-column:1/-1">이 제품으로 등록된 비품이 없습니다.</div>`}</div>`;
+    B.querySelectorAll(".card").forEach(b=>b.onclick=()=>openItem(b.dataset.id));
+    $("inspThis").onclick=()=>{location.hash="inspect"; fillInspect(prod.category,prod.id);};
+  }
+}
+["q","fVerdict","sort"].forEach(id=>$(id).addEventListener("input",renderDashboard));
+
+function vendorsFor(cat){ return vendors.filter(v=>(v.fields||[]).includes(cat)); }
+const STOP=new Set(["교체","수리","보수","조정","부분","재접착","개당","세트","및","또는","한","쌍"]);
+function rateHits(v,defects){ const rates=v.rates||[]; return rates.filter(r=>(defects||[]).some(d=>String(d.part||"").split(/[\s·,()/]/).filter(w=>w.length>1&&!STOP.has(w)).some(w=>r.work.includes(w)||(w==="가스실린더"&&r.work.includes("쇼바"))||(w==="캐스터"&&r.work.includes("바퀴"))))); }
+function vendorHTML(v, defects, compact){
+  const rates=(v.rates||[]), hits=rateHits(v,defects);
+  const map=v.addr?`https://map.naver.com/p/search/${encodeURIComponent(v.addr)}`:"";
+  if(compact) return `<div class="vendor"><div class="row" style="justify-content:space-between"><b>${esc(v.name)} ${v.example?'<span class="tag">예시</span>':""}</b><span class="mono" style="font-size:13px;user-select:all">${esc(v.phone||"")}</span></div>
+   <div class="muted" style="font-size:13px">${esc(v.addr||"")}${v.trip?` · 출장비 ${esc(v.trip)}`:""}</div>
+   ${hits.length?`<div style="font-size:13px">${hits.map(r=>`<b>${esc(r.work)} <span class="mono">${won(r.price)}</span></b>`).join(" · ")}</div>`:rates.length?`<div class="muted" style="font-size:13px">관련 단가가 공개되어 있지 않습니다. 견적 문의가 필요합니다.</div>`:""}</div>`;
+  return `<div class="vcard">
+   <div class="row" style="justify-content:space-between;align-items:flex-start"><h3>${esc(v.name)} ${v.example?'<span class="tag">예시</span>':""}</h3><div class="mini">${(v.fields||[]).map(f=>`<span class="tag">${esc(f)}</span>`).join("")}</div></div>
+   ${v.feature?`<div style="font-size:14px">${esc(v.feature)}</div>`:""}
+   <dl class="vinfo" style="margin:0">
+     <dt>전화</dt><dd class="mono" style="user-select:all">${esc(v.phone||"–")}</dd>
+     <dt>주소</dt><dd>${esc(v.addr||"–")} ${map?`<a href="${map}" target="_blank" rel="noopener" style="color:var(--accent);font-size:12px">지도</a>`:""}</dd>
+     <dt>출장 지역</dt><dd>${esc(v.region||"–")}</dd>
+     ${v.trip?`<dt>출장비</dt><dd>${esc(v.trip)}</dd>`:""}
+     ${v.hours?`<dt>영업시간</dt><dd>${esc(v.hours)}</dd>`:""}
+     ${v.warranty?`<dt>A/S 보증</dt><dd>${esc(v.warranty)}</dd>`:""}
+     ${v.tech?`<dt>기술력</dt><dd>${esc(v.tech)}</dd>`:""}
+   </dl>
+   ${(v.pros||[]).length||(v.cons||[]).length?`<div class="pc"><div class="pro"><b>장점</b><ul>${(v.pros||[]).map(x=>`<li>${esc(x)}</li>`).join("")||"<li>–</li>"}</ul></div><div class="con"><b>확인할 점</b><ul>${(v.cons||[]).map(x=>`<li>${esc(x)}</li>`).join("")||"<li>–</li>"}</ul></div></div>`:""}
+   ${rates.length?`<div><div class="label" style="margin-bottom:4px">공개 정비단가</div><div class="tablewrap"><table class="rates">${rates.map(r=>`<tr class="${hits.includes(r)?"hit":""}"><td>${esc(r.work)}</td><td>${r.price?won(r.price)+(r.from?"~":""):esc(r.note||"문의")}</td></tr>`).join("")}</table></div></div>`:""}
+   ${v.url?`<div class="src">출처: <a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.url)}</a>${v.checked?` · ${esc(v.checked)} 확인`:""}</div>`:""}
+  </div>`;
+}
+
+function econHTML(price,date,life,cost){
+  const res=residual(price,date,life), age=ageYears(date);
+  const over = res!=null && cost!=null && cost>=res;
+  return `<div class="econ">
+    <div><div class="label">경과 / 내용연수</div><div class="v">${age.toFixed(1)} / ${life||"–"}년</div></div>
+    <div><div class="label">잔존가치</div><div class="v">${won(res)}</div></div>
+    <div><div class="label">예상정비비</div><div class="v">${won(cost)}</div></div>
+    <div><div class="label">정비비 ÷ 잔존가치</div><div class="v" style="color:${over?"var(--gD)":"var(--fg)"}">${res==null||cost==null||!res?"–":Math.round(cost/res*100)+"%"}</div></div></div>`;
+}
+function defectsHTML(d){
+  if(!d||!d.length) return `<div class="muted" style="font-size:14px">정비가 필요한 부위가 없습니다.</div>`;
+  return `<div class="defects">${d.map(x=>`<div class="defect ${esc(x.severity)}"><div class="head"><span>${esc(x.part)} <span class="tag">${esc(x.severity||"")}</span></span><span class="mono">${won(x.cost)}</span></div>
+    <div style="font-size:14px">${esc(x.issue)}</div><div class="muted" style="font-size:13px"><b>정비방법</b> ${esc(x.method)}</div></div>`).join("")}</div>`;
+}
+
+function openItem(id){
+  const i=items.find(x=>x.id===id); if(!i) return;
+  const vs=vendorsFor(i.category);
+  $("dlgBody").innerHTML=`<div class="row" style="justify-content:space-between"><h2>${esc(i.category)} · ${esc(i.maker||"")} ${esc(i.model||"")}</h2><button class="small ghost" id="dClose">닫기</button></div>
+   ${i.grade?`<div class="verdict ${i.grade}"><div class="bigg ${i.grade}">${i.grade}</div><div style="min-width:0;flex:1"><div style="font-weight:700">${GRADES[i.grade].name} → <span class="vd ${esc(i.verdict)}">${esc(i.verdict)}</span></div><div style="font-size:14px">${esc(i.summary||GRADES[i.grade].desc)}</div></div></div>`:""}
+   <div class="gallery">${(i.photos&&i.photos.length?i.photos:[prodPhoto(products.find(x=>x.id===i.productId))||placeholder(i.category)]).map(p=>`<img alt="비품 사진" src="${esc(p)}">`).join("")}</div>
+   <div class="kv"><div><b>관리번호</b>${esc(i.serial||"–")}</div><div><b>사용 부대</b>${esc(i.unit||"–")}</div><div><b>계약번호</b>${esc(i.contract||"–")}</div><div><b>취득일</b>${esc(i.acquiredAt||"–")}</div><div><b>취득단가</b>${won(i.price)}</div><div><b>메모</b>${esc(i.memo||"–")}</div></div>
+   ${i.scrapReasons&&i.scrapReasons.length?`<div class="scrap yes"><div class="t">폐품 판정 근거</div><div class="checks" style="padding:0">${i.scrapReasons.map(x=>`<div class="ck hit"><code>${esc(x.code)}</code><span>${esc(x.text)}${x.evidence?`<br><span style="font-weight:400">근거: ${esc(x.evidence)}</span>`:""}</span></div>`).join("")}</div></div>`:""}
+   ${econHTML(i.price,i.acquiredAt,i.lifeYears,i.repairCost)}
+   <div><div class="label" style="margin-bottom:6px">정비 필요 부위 · 방법 · 단가</div>${defectsHTML(i.defects)}</div>
+   <div><div class="label" style="margin-bottom:6px">정비업체</div>${vs.length?`<div class="vendors">${vs.map(v=>vendorHTML(v,i.defects,true)).join("")}</div>`:'<div class="muted" style="font-size:14px">이 품목을 정비하는 업체가 없습니다. 정비업체 탭에서 등록하세요.</div>'}</div>
+   <div class="row" style="justify-content:flex-end"><span id="dDelMsg" class="muted" style="font-size:13px"></span><button class="small ghost" id="dDel">삭제</button></div>`;
+  $("dClose").onclick=()=>$("dlg").close();
+  let armed=false;
+  $("dDel").onclick=async()=>{
+    if(!armed){armed=true;$("dDel").textContent="한 번 더 눌러 삭제";$("dDelMsg").textContent="삭제하면 되돌릴 수 없습니다.";return;}
+    try{ await db.doc("items/"+id).delete(); $("dlg").close(); toast("삭제했습니다"); }catch(e){ $("dDelMsg").textContent="삭제 권한이 없습니다."; }
+  };
+  $("dlg").showModal();
+}
+$("dlg").addEventListener("click",e=>{ if(e.target.id==="dlg") $("dlg").close(); });
+
+/* ---------- inspect ---------- */
+const catSel=$("i-cat"), prodSel=$("i-prod");
+function fillCatOptions(){ const cur=catSel.value; catSel.innerHTML=""; catNames().forEach(c=>catSel.add(new Option(c,c))); if(CATS[cur]) catSel.value=cur; fillProdOptions(); }
+function fillProdOptions(){ const cur=prodSel.value; prodSel.innerHTML=""; const ps=products.filter(x=>x.category===catSel.value);
+  ps.forEach(x=>prodSel.add(new Option(`${x.maker} · ${x.model}`,x.id))); prodSel.add(new Option("+ 새 제품 종류 등록…","__new"));
+  if(ps.some(x=>x.id===cur)) prodSel.value=cur; else if(ps[0]) prodSel.value=ps[0].id; }
+function fillInspect(cat,pid){ catSel.value=cat; $("i-life").value=CATS[cat]; fillProdOptions(); prodSel.value=pid; prodSel.onchange(); }
+catSel.onchange=()=>{ $("i-life").value=CATS[catSel.value]; fillProdOptions(); prodSel.onchange(); };
+prodSel.onchange=()=>{ if(prodSel.value==="__new"){ openProductForm(catSel.value); return; } const x=products.find(y=>y.id===prodSel.value); if(x&&x.price) $("i-price").value=x.price; };
+fillCatOptions(); $("i-life").value=CATS[catSel.value];
+const SHOT_LABELS=["정면","측면","후면","손상부위"];
+let shots=[null,null,null,null], shotBlobs=[null,null,null,null], shotBig=[null,null,null,null], lastAI=null;
+
+function renderShots(){
+  $("shots").innerHTML=SHOT_LABELS.map((l,k)=>`<div class="shot">${shots[k]?`<img alt="${l}" src="${shots[k]}"><button class="x small" data-k="${k}" aria-label="${l} 사진 삭제">✕</button>`:`<span>📷<br>${l}</span>`}
+    <input type="file" id="shot${k}" accept="image/*" capture="environment" data-k="${k}" aria-label="${l} 사진 촬영 또는 선택" ${shots[k]?"hidden":""}></div>`).join("");
+  $("shots").querySelectorAll("input").forEach(inp=>inp.onchange=async()=>{const f=inp.files[0]; if(!f) return; await addShot(+inp.dataset.k,f);});
+  $("shots").querySelectorAll(".x").forEach(b=>b.onclick=e=>{e.stopPropagation(); const k=+b.dataset.k; shots[k]=null; shotBlobs[k]=null; shotBig[k]=null; renderShots();});
+}
+async function shrink(file,max,q){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
+    const s=Math.min(1,max/Math.max(img.width,img.height));
+    const c=document.createElement("canvas"); c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",q));
+    return {blob, dataUrl:c.toDataURL("image/jpeg",q)};
+  } finally { URL.revokeObjectURL(url); }
+}
+async function addShot(k,f){
+  try{
+    const big=await shrink(f,1280,0.82);   // AI 분석용
+    const small=await shrink(f,360,0.7);   // 저장용 썸네일
+    shotBlobs[k]=big.blob; shotBig[k]=big.dataUrl; shots[k]=small.dataUrl; renderShots();
+  }catch(e){ toast("이 사진을 읽을 수 없습니다. JPG나 PNG로 다시 올려주세요."); }
+}
+renderShots();
+
+function itemInfo(){
+  const pr=products.find(x=>x.id===prodSel.value)||{};
+  return {category:catSel.value, productId:pr.id||null, maker:pr.maker||"", model:pr.model||"", spec:pr.spec||"", material:pr.material||"", serial:$("i-serial").value.trim(), unit:$("i-unit").value.trim(),
+    contract:$("i-contract").value.trim(), acquiredAt:$("i-date").value, price:Number($("i-price").value)||null,
+    lifeYears:Number($("i-life").value)||CATS[catSel.value], memo:$("i-memo").value.trim()};
+}
+
+function applyEconomics(r,info){ return applyRules(r,info); }
+/* 자동 판정: 품목별 기준 코드 + 공통 폐품기준 */
+function applyRules(r,info){
+  const cr=critFor(info.category), all={}; ["A","B","C","D"].forEach(g=>cr[g].forEach(x=>all[x.code]={...x,grade:g}));
+  r.matched=(Array.isArray(r.matched)?r.matched:[]).filter(m=>m&&all[m.code]).map(m=>({...all[m.code],evidence:m.evidence||""}));
+  const res=residual(info.price,info.acquiredAt,info.lifeYears);
+  r.repairCost=(r.defects||[]).reduce((a,d)=>a+(Number(d.cost)||0),0);
+  r.common=[];
+  if(res!=null && r.repairCost>0 && r.repairCost>=res) r.common.push({code:"X-1",text:COMMON_SCRAP[0][1],evidence:`정비비 ${won(r.repairCost)} ≥ 잔존가치 ${won(res)}`});
+  const cCount=r.matched.filter(m=>m.grade==="C").length;
+  if(ageYears(info.acquiredAt)>=info.lifeYears && cCount>=2) r.common.push({code:"X-2",text:COMMON_SCRAP[1][1],evidence:`경과 ${ageYears(info.acquiredAt).toFixed(1)}년 / 내용연수 ${info.lifeYears}년, 요정비 ${cCount}곳`});
+  const dHits=r.matched.filter(m=>m.grade==="D");
+  const worst=r.matched.some(m=>m.grade==="D")?"D":r.matched.some(m=>m.grade==="C")?"C":(r.grade==="A"?"A":"B");
+  r.grade=worst;
+  r.scrap = dHits.length>0 || r.common.length>0;
+  if(r.scrap){ r.grade="D"; r.verdict="폐품"; } else r.verdict=GRADES[r.grade].verdict;
+  r.scrapReasons=[...dHits,...r.common];
+  return r;
+}
+function renderResult(r,info){
+  const vs=vendorsFor(info.category);
+  const myPhoto=shots.find(Boolean);
+  const cr=critFor(info.category);
+  const scrapHTML=`<div class="scrap ${r.scrap?"yes":"no"}"><div class="t">${r.scrap?"폐품 판정: 해당":"폐품 판정: 비해당"}</div>
+    ${r.scrap?`<div style="font-size:14px">다음 폐품 기준에 해당합니다.</div><div class="checks" style="padding:0">${r.scrapReasons.map(x=>`<div class="ck hit"><code>${x.code}</code><span>${esc(x.text)}${x.evidence?`<br><span style="font-weight:400">근거: ${esc(x.evidence)}</span>`:""}</span></div>`).join("")}</div>`
+      :`<div style="font-size:14px">${esc(info.category)} 폐품 기준(D급 ${cr.D.length}개 항목)과 공통 폐품기준에 해당하는 항목이 없습니다.</div>`}
+    <div class="compare"><figure><img alt="촬영 사진" src="${esc(myPhoto||illus(info.category,0))}"><figcaption>촬영 사진</figcaption></figure>
+      <figure><img alt="${r.grade}급 기준 예시" src="${esc(refPhoto(info.category,r.grade)||gradeIllus(info.category,r.grade))}"><figcaption>${GRADES[r.grade].name} 기준 형상</figcaption></figure></div></div>`;
+  const cHits=r.matched.filter(m=>m.grade==="C");
+  $("result").innerHTML=scrapHTML+`<div class="verdict ${r.grade}"><div class="bigg ${r.grade}">${r.grade}</div>
+    <div style="min-width:0;flex:1"><div style="font-weight:700;font-size:16px">${GRADES[r.grade].name} → <span class="vd ${r.verdict}">${r.verdict}</span></div>
+    <div style="font-size:14px">${esc(r.summary)}</div>
+    <div class="muted" style="font-size:12px">AI 신뢰도 ${Math.round((r.confidence||0)*100)}%${r.visibleModel?` · 사진상 모델: ${esc(r.visibleModel)}`:""}</div></div></div>
+    ${cHits.length?`<div><div class="label" style="margin-bottom:6px">해당한 요정비(C급) 기준</div><div class="checks" style="padding:0">${cHits.map(x=>`<div class="ck hitC"><code>${x.code}</code><span>${esc(x.text)}${x.evidence?`<br><span style="font-weight:400">근거: ${esc(x.evidence)}</span>`:""}</span></div>`).join("")}</div></div>`:""}
+    ${econHTML(info.price,info.acquiredAt,info.lifeYears,r.repairCost)}
+    <div><div class="label" style="margin-bottom:6px">정비 필요 부위 · 방법 · 예상단가</div>${defectsHTML(r.defects)}</div>
+    <div><div class="label" style="margin-bottom:6px">추천 정비업체</div>${vs.length?`<div class="vendors">${vs.map(v=>vendorHTML(v,r.defects,true)).join("")}</div>`:'<div class="muted" style="font-size:14px">이 품목을 정비하는 등록 업체가 없습니다.</div>'}</div>
+    ${r.notes?`<div class="muted" style="font-size:13px">${esc(r.notes)}</div>`:""}`;
+  $("o-grade").value=r.grade; $("o-verdict").value=r.verdict; $("o-cost").value=r.repairCost||0;
+}
+
+let sampleFn=null, sampleImages=false;
+(async()=>{
+  if(SUPA){ return; }
+  if(LOCAL){ const n=$("aiNote"); n.hidden=false; n.className="notice warn"; n.textContent="로컬 미리보기입니다. AI 자동 분석은 예시 결과로 동작합니다."; return; }
+  try{ sampleFn=await claude.use("sample"); if(sampleFn){ const lim=await sampleFn.limits().catch(()=>null); sampleImages=!!lim?.images; } }catch(e){ sampleFn=null; }
+  if(!sampleFn||!sampleImages){ const n=$("aiNote"); n.hidden=false; n.className="notice warn"; n.textContent="이 화면에서는 AI 사진 분석을 쓸 수 없습니다. claude.ai에 로그인한 상태로 열면 사용할 수 있으며, 지금은 등급을 직접 선택해 저장할 수 있습니다."; $("analyzeBtn").disabled=true; }
+})();
+
+$("analyzeBtn").onclick=async()=>{
+  const blobs=shotBlobs.filter(Boolean);
+  if(!blobs.length){ toast("사진을 1장 이상 올려주세요"); return; }
+  const info=itemInfo();
+  const btn=$("analyzeBtn"); btn.disabled=true; $("anStatus").innerHTML='<span class="spin"></span> 사진을 분석하는 중… (보통 20~60초)';
+  const labels=SHOT_LABELS.filter((_,k)=>shotBlobs[k]);
+  const prompt=`당신은 군 부대 사무용 가구·비품의 질정분류(상태등급) 판정관입니다. 첨부 사진(${labels.join(", ")} 순서)과 아래 정보로 비품 상태를 판정하세요.
+
+[비품 정보]
+품목: ${info.category}
+제조사·모델: ${info.maker||"미상"} ${info.model||""} (${info.spec||"규격 미상"}${info.material?", "+info.material:""})
+취득일: ${info.acquiredAt||"미상"} / 취득단가: ${info.price||"미상"}원 / 내용연수: ${info.lifeYears}년
+사용자 메모: ${info.memo||"없음"}
+
+[${info.category} 판정기준 — 각 항목을 사진과 하나씩 대조하세요]
+${["A","B","C","D"].map(g=>GRADES[g].name+"\n"+critFor(info.category)[g].map(x=>`  ${x.code}: ${x.text}`).join("\n")).join("\n")}
+
+[규칙]
+- 사진에서 실제로 보이는 근거로만 판단하고, 보이지 않는 내부 고장은 메모가 있을 때만 반영하세요.
+- matched에는 사진에서 근거가 보이는 C급·D급 항목 코드만 넣고, 각 코드마다 사진에서 본 근거를 evidence에 적으세요.
+- grade는 해당 항목 중 가장 나쁜 등급입니다. C·D 항목이 없으면 A 또는 B 중에서 고르세요.
+- defects에는 정비가 필요한 부위만 넣으세요. A·B급이면 빈 배열이어도 됩니다.
+- cost는 한국 사무가구 수리 시장의 일반적인 부품+공임 추정 금액(원, 정수)입니다.
+- 사진이 비품이 아니거나 판단이 어려우면 confidence를 0.3 이하로 하고 notes에 다시 찍을 각도를 적으세요.
+
+JSON만 출력하세요:
+{"grade":"A|B|C|D","matched":[{"code":"기준 코드","evidence":"사진에서 본 근거"}],"confidence":0~1,"summary":"한두 문장 판정 요약","visibleModel":"사진에서 읽힌 모델명 또는 빈 문자열","defects":[{"part":"부위","issue":"관찰된 문제","severity":"경미|보통|심각","method":"정비방법(교체/수리 내용)","cost":정수}],"notes":"추가 확인사항"}`;
+  try{
+    let r = SUPA ? await serverAnalyze(prompt,info) : LOCAL ? await demoAnalyze(info) : await sampleFn.json(prompt,{images:blobs,modelTier:"default"});
+    if(!r||!GRADES[r.grade]) throw {code:"bad_output"};
+    r.defects=Array.isArray(r.defects)?r.defects:[];
+    r=applyEconomics(r,info); lastAI=r; renderResult(r,info);
+    $("anStatus").textContent="분석 완료. 결과를 확인하고 저장하세요.";
+  }catch(e){
+    const m={not_granted:"AI 사용이 허용되지 않았습니다. 등급을 직접 선택해 저장하세요.",rate_limited:"요청이 많습니다. 잠시 후 다시 눌러주세요.",image_rejected:"사진 형식을 읽지 못했습니다. 다시 촬영해 주세요.",bad_output:"AI 응답을 해석하지 못했습니다. 다시 시도해 주세요."};
+    $("anStatus").textContent=m[e?.code]||"분석에 실패했습니다. 다시 시도하거나 등급을 직접 선택하세요.";
+  }finally{ btn.disabled=!sampleFn&&!LOCAL; }
+};
+
+function resetForm(){
+  ["i-serial","i-unit","i-contract","i-date","i-price","i-memo","o-cost"].forEach(id=>$(id).value="");
+  $("o-grade").value=""; $("o-verdict").value=""; shots=[null,null,null,null]; shotBlobs=[null,null,null,null]; shotBig=[null,null,null,null]; lastAI=null; renderShots();
+  $("result").innerHTML='<div class="empty">사진을 올리고 <b>AI 자동 분석</b>을 누르면 여기에 결과가 나옵니다.</div>'; $("anStatus").textContent=""; $("saveStatus").textContent="";
+}
+$("resetBtn").onclick=resetForm;
+$("o-grade").onchange=()=>{ const g=$("o-grade").value; if(g) $("o-verdict").value=GRADES[g].verdict; };
+
+$("saveBtn").onclick=async()=>{
+  const info=itemInfo(), g=$("o-grade").value, v=$("o-verdict").value;
+  if(!g||!v){ $("saveStatus").textContent="최종 등급과 판정을 선택하세요."; return; }
+  if(!db){ $("saveStatus").textContent="저장소에 연결되지 않았습니다. claude.ai에 로그인한 상태로 열어주세요."; return; }
+  const doc={...info, photos:shots.filter(Boolean), grade:g, verdict:v, repairCost:Number($("o-cost").value)||0,
+    summary:lastAI?.summary||GRADES[g].desc, defects:lastAI?.defects||[], matched:lastAI?.matched||[], scrapReasons:lastAI?.scrapReasons||[], confidence:lastAI?.confidence??null, aiGrade:lastAI?.grade||null,
+    analyzedAt:Date.now(), createdAt:Date.now(), createdBy:me||null, example:false};
+  const btn=$("saveBtn"); btn.disabled=true; $("saveStatus").textContent="저장하는 중…";
+  try{ await db.collection("items").add(doc); toast("판정 결과를 저장했습니다"); resetForm(); location.hash="dashboard"; }
+  catch(e){ $("saveStatus").textContent = e?.code==="permission_denied"?"저장 권한이 없습니다. 편집 권한을 요청하세요.":"저장하지 못했습니다. 사진 수를 줄여 다시 시도하세요."; }
+  finally{ btn.disabled=false; }
+};
+
+/* ---------- vendors ---------- */
+function fillVendorCats(){ $("v-cats").innerHTML=catNames().map((c,k)=>`<label style="display:flex;gap:4px;align-items:center"><input type="checkbox" id="vc${k}" value="${c}" style="width:auto">${c}</label>`).join(""); }
+fillVendorCats();
+function renderVendors(){
+  const fr=$("vfRegion").value, fc=$("vfCat").value;
+  const cur=fc; $("vfCat").innerHTML='<option value="">전체 품목</option>'+catNames().map(c=>`<option ${c===cur?"selected":""}>${esc(c)}</option>`).join("");
+  const list=vendors.filter(v=>(!fr||(v.region||"").includes(fr)||(fr==="경기"&&/인천|수도권/.test(v.region||"")))&&(!fc||(v.fields||[]).includes(fc)));
+  $("vendorList").innerHTML = list.length? list.map(v=>vendorHTML(v,[])).join("") : '<div class="empty" style="grid-column:1/-1">조건에 맞는 업체가 없습니다. <b>+ 업체 추가</b>로 등록하세요.</div>';
+}
+["vfRegion","vfCat"].forEach(id=>$(id).addEventListener("input",renderVendors));
+$("vAddBtn").onclick=()=>{ $("vForm").hidden=false; $("v-name").focus(); };
+$("vCancel").onclick=()=>{ $("vForm").hidden=true; };
+const lines=id=>$(id).value.split("\n").map(x=>x.trim()).filter(Boolean);
+$("vSave").onclick=async()=>{
+  const name=$("v-name").value.trim(); if(!name){ $("vStatus").textContent="업체명을 입력하세요."; return; }
+  const fields=[...$("v-cats").querySelectorAll("input:checked")].map(x=>x.value);
+  const rates=lines("v-rates").map(l=>{const m=l.split(/[,，\t]/); return m.length>=2?{work:m[0].trim(),price:Number(m[1].replace(/[^0-9]/g,""))||0}:null}).filter(Boolean);
+  if(!db){ $("vStatus").textContent="저장소에 연결되지 않았습니다."; return; }
+  const ids=["v-name","v-phone","v-addr","v-region","v-trip","v-hours","v-warranty","v-url","v-feature","v-pros","v-cons","v-tech","v-rates"];
+  try{ await db.collection("vendors").add({name,phone:$("v-phone").value.trim(),addr:$("v-addr").value.trim(),region:$("v-region").value.trim(),trip:$("v-trip").value.trim(),
+      hours:$("v-hours").value.trim(),warranty:$("v-warranty").value.trim(),url:$("v-url").value.trim(),feature:$("v-feature").value.trim(),pros:lines("v-pros"),cons:lines("v-cons"),tech:$("v-tech").value.trim(),
+      fields,rates,example:false,checked:new Date().toISOString().slice(0,10),createdAt:Date.now()});
+    ids.forEach(id=>$(id).value=""); $("v-cats").querySelectorAll("input").forEach(x=>x.checked=false); $("vStatus").textContent=""; $("vForm").hidden=true; toast("업체를 저장했습니다"); }
+  catch(e){ $("vStatus").textContent="저장하지 못했습니다. 권한을 확인하세요."; }
+};
+
+/* ---------- criteria ---------- */
+let critCat="책상";
+function renderCriteria(){
+  if(!CATS[critCat]) critCat=catNames()[0];
+  $("critCats").innerHTML=catNames().map(c=>`<button class="cat" data-c="${esc(c)}" aria-pressed="${c===critCat}"><img alt="" src="${esc(illus(c,0))}">${esc(c)}</button>`).join("");
+  $("critCats").querySelectorAll(".cat").forEach(b=>b.onclick=()=>{critCat=b.dataset.c;renderCriteria();});
+  const cr=critFor(critCat);
+  $("critGrid").innerHTML=["A","B","C","D"].map(g=>{const rp=refPhoto(critCat,g);
+    return `<div class="gcol ${g}"><div class="gh"><span>${GRADES[g].name}</span><span style="font-size:12px">${g==="D"?"폐품 기준":GRADES[g].verdict}</span></div>
+    <div class="ex"><img alt="${esc(critCat)} ${g}급 형상 예시" src="${esc(rp||gradeIllus(critCat,g))}"><span class="src">${rp?"기준 사진":"예시 그림"}</span></div>
+    <div class="checks">${cr[g].map(x=>`<div class="ck"><code>${x.code}</code><span>${esc(x.text)}</span></div>`).join("")}</div>
+    <button class="refbtn ghost">${rp?"기준 사진 바꾸기":"실제 기준 사진 등록"}<input type="file" accept="image/*" data-g="${g}" aria-label="${g}급 기준 사진 등록"></button></div>`}).join("");
+  $("critGrid").querySelectorAll(".refbtn input").forEach(inp=>inp.onchange=async()=>{const f=inp.files[0]; if(!f) return;
+    if(!db){ toast("저장소에 연결되지 않았습니다."); return; }
+    try{ const r=await shrink(f,640,0.75); await db.collection("refs").add({key:critCat+"|"+inp.dataset.g,photo:r.dataUrl,createdAt:Date.now()}); toast("기준 사진을 등록했습니다"); }
+    catch(e){ toast("기준 사진을 저장하지 못했습니다. 권한을 확인하세요."); }});
+  $("commonCrit").innerHTML=COMMON_SCRAP.map(x=>`<div class="ck"><code>${x[0]}</code><span>${esc(x[1])}</span></div>`).join("");
+}
+renderCriteria();
+function fillLife(){ $("lifeTbl").innerHTML="<tr>"+Object.keys(CATS).map(c=>`<th>${c}</th>`).join("")+"</tr><tr>"+Object.values(CATS).map(v=>`<td class="mono">${v}년</td>`).join("")+"</tr>"; }
+fillLife();
+
+/* ---------- 제품 종류 등록 ---------- */
+let npPhoto=null;
+function openProductForm(cat){
+  npPhoto=null;
+  $("dlgBody").innerHTML=`<div class="row" style="justify-content:space-between"><h2>${esc(cat)} 제품 종류 추가</h2><button class="small ghost" id="npClose">닫기</button></div>
+   <div class="muted" style="font-size:14px">납품 업체마다 다른 제품을 각각 등록합니다. 대표 사진이 없으면 품목 그림으로 표시합니다.</div>
+   <div class="form"><label class="f">제조사·납품업체<input id="np-maker"></label><label class="f">모델명<input id="np-model"></label>
+   <label class="f">규격<input id="np-spec" placeholder="예: 1600×800×720"></label><label class="f">색상·재질<input id="np-mat" placeholder="예: 메이플 / 철제 다리"></label><label class="f">조달단가(원)<input id="np-price" type="number" min="0" step="1000"></label></div>
+   <div class="row"><div class="shot" style="width:140px"><span id="np-ph">📷<br>대표 사진</span><input type="file" id="np-file" accept="image/*" capture="environment" aria-label="대표 사진"></div></div>
+   <div class="row"><button class="primary" id="np-save">제품 저장</button><span id="np-msg" class="muted" style="font-size:13px"></span></div>`;
+  $("npClose").onclick=()=>$("dlg").close();
+  $("np-file").onchange=async e=>{const f=e.target.files[0]; if(!f) return; try{const r=await shrink(f,480,0.75); npPhoto=r.dataUrl; $("np-ph").outerHTML=`<img alt="" src="${npPhoto}">`;}catch(_){ $("np-msg").textContent="사진을 읽지 못했습니다."; }};
+  $("np-save").onclick=async()=>{const maker=$("np-maker").value.trim(), model=$("np-model").value.trim();
+    if(!maker||!model){ $("np-msg").textContent="제조사와 모델명을 입력하세요."; return; }
+    if(!db){ $("np-msg").textContent="저장소에 연결되지 않았습니다."; return; }
+    try{ const ref=await db.collection("products").add({category:cat,maker,model,spec:$("np-spec").value.trim(),material:$("np-mat").value.trim(),price:Number($("np-price").value)||null,photo:npPhoto,variant:products.filter(x=>x.category===cat).length,example:false,createdAt:Date.now()});
+      $("dlg").close(); toast("제품 종류를 추가했습니다"); if(location.hash==="#inspect"){ setTimeout(()=>fillInspect(cat,ref.id),300); } }
+    catch(e){ $("np-msg").textContent="저장하지 못했습니다. 권한을 확인하세요."; }};
+  $("dlg").showModal();
+}
+function catsChanged(){ fillCatOptions(); fillVendorCats(); fillLife(); renderCriteria(); renderVendors(); renderDashboard(); }
+
+/* ---------- data ---------- */
+/* ---------- 홈: 사무실 인포그래픽 ---------- */
+function officeSVG(){
+  const camo=`<pattern id="camo" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#5f6b3c"/><rect x="0" y="0" width="6" height="4" fill="#3f4a28"/><rect x="8" y="3" width="5" height="5" fill="#7c7550"/><rect x="2" y="9" width="7" height="3" fill="#2f3520"/><rect x="11" y="10" width="5" height="5" fill="#46512c"/><rect x="5" y="13" width="4" height="3" fill="#7c7550"/></pattern>`;
+  const skin="#e8c39e", hair="#2b2622";
+  const cap=(cx,y)=>`<path d="M${cx-19} ${y+12} Q${cx-19} ${y-4} ${cx} ${y-5} Q${cx+19} ${y-4} ${cx+19} ${y+12} Z" fill="url(#camo)" stroke="#2f3520" stroke-width="1"/><rect x="${cx-22}" y="${y+10}" width="44" height="5" rx="2" fill="#3f4a28"/>`;
+  const face=(cx,cy)=>`<circle cx="${cx}" cy="${cy}" r="17" fill="${skin}"/><path d="M${cx-17} ${cy-2} Q${cx-16} ${cy-14} ${cx} ${cy-15} Q${cx+16} ${cy-14} ${cx+17} ${cy-2} L${cx+17} ${cy-6} Q${cx} ${cy-20} ${cx-17} ${cy-6} Z" fill="${hair}"/><circle cx="${cx-6}" cy="${cy+1}" r="1.8" fill="#2b2622"/><circle cx="${cx+6}" cy="${cy+1}" r="1.8" fill="#2b2622"/><path d="M${cx-5} ${cy+8} Q${cx} ${cy+11} ${cx+5} ${cy+8}" stroke="#a0705a" stroke-width="1.6" fill="none"/>`;
+  const sitter=(cx,top,chair)=>`<rect x="${cx-38}" y="${top+30}" width="76" height="86" rx="12" fill="${chair}"/>`
+    +`<path d="M${cx-36} ${top+52} Q${cx-36} ${top+40} ${cx-22} ${top+38} L${cx+22} ${top+38} Q${cx+36} ${top+40} ${cx+36} ${top+52} L${cx+30} ${top+130} L${cx-30} ${top+130} Z" fill="url(#camo)"/>`
+    +`<path d="M${cx-8} ${top+38} L${cx} ${top+50} L${cx+8} ${top+38}" fill="#3f4a28"/><rect x="${cx+8}" y="${top+60}" width="20" height="5" fill="#1f2416"/><rect x="${cx-28}" y="${top+60}" width="16" height="5" fill="#1f2416"/>`
+    +`<path d="M${cx-34} ${top+52} L${cx-46} ${top+112} L${cx-30} ${top+118}" stroke="url(#camo)" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+    +`<path d="M${cx+34} ${top+52} L${cx+46} ${top+112} L${cx+30} ${top+118}" stroke="url(#camo)" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+    +face(cx,top+18)+cap(cx,top+2);
+  const stander=(cx,bottom,armPath,extra)=>{const t=bottom-200;return `<rect x="${cx-18}" y="${t+110}" width="15" height="80" fill="url(#camo)"/><rect x="${cx+3}" y="${t+110}" width="15" height="80" fill="url(#camo)"/>`
+    +`<rect x="${cx-21}" y="${t+186}" width="20" height="14" rx="4" fill="#1b1b1b"/><rect x="${cx+1}" y="${t+186}" width="20" height="14" rx="4" fill="#1b1b1b"/>`
+    +`<path d="M${cx-30} ${t+52} Q${cx-30} ${t+40} ${cx-18} ${t+38} L${cx+18} ${t+38} Q${cx+30} ${t+40} ${cx+30} ${t+52} L${cx+24} ${t+118} L${cx-24} ${t+118} Z" fill="url(#camo)"/>`
+    +`<rect x="${cx-24}" y="${t+108}" width="48" height="6" fill="#2f3520"/><path d="M${cx-7} ${t+38} L${cx} ${t+50} L${cx+7} ${t+38}" fill="#3f4a28"/><rect x="${cx+6}" y="${t+58}" width="17" height="5" fill="#1f2416"/>`
+    +armPath+face(cx,t+18)+cap(cx,t+2)+(extra||"");};
+  const books=(x,y,w)=>{let o="",bx=x+4,k=0;const C=["#7b4b3a","#3d5a80","#6a8a5a","#c09040","#5b5b6b","#9a4a4a"];while(bx<x+w-12){const h=26+((k*7)%14),bw=9+(k%3)*2;o+=`<rect x="${bx}" y="${y-h}" width="${bw}" height="${h}" fill="${C[k%6]}"/>`;bx+=bw+2;k++;}return o;};
+  const paper=(x,y)=>`<rect x="${x}" y="${y}" width="44" height="10" fill="#fff" stroke="#c9c9c0" transform="skewX(-25)"/>`;
+  // 콜아웃(번호 + 이름)
+  const co=(n,x,y,label,cat,dx,dy)=>{const lx=x+(dx||0),ly=y+(dy||0);return `<g class="co" tabindex="0" role="link" aria-label="${label} 현황 보기" data-c="${cat}">${dx||dy?`<line x1="${x}" y1="${y}" x2="${lx}" y2="${ly}" stroke="#1d2a17" stroke-width="2"/><circle cx="${x}" cy="${y}" r="4" fill="#1d2a17"/>`:""}<rect x="${lx-4}" y="${ly-16}" width="${44+label.length*16}" height="32" rx="16" fill="#ffffff" stroke="#1d2a17" stroke-width="2"/><circle cx="${lx+12}" cy="${ly}" r="13" fill="#3f5a2e"/><text x="${lx+12}" y="${ly+5}" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" font-family="IBM Plex Mono,monospace">${n}</text><text x="${lx+32}" y="${ly+5}" font-size="15" font-weight="700" fill="#1d2a17" font-family="IBM Plex Sans KR,sans-serif">${label}</text></g>`;};
+  return `<svg viewBox="0 0 1200 660" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="군복을 입은 장병들이 사무실에서 업무하는 모습과 사무비품 7종">
+  <defs>${camo}<linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef0e8"/><stop offset="1" stop-color="#dfe3d6"/></linearGradient>
+  <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cbbfa6"/><stop offset="1" stop-color="#b9ab8e"/></linearGradient></defs>
+  <rect width="1200" height="445" fill="url(#wall)"/><rect y="445" width="1200" height="215" fill="url(#floor)"/>
+  ${Array.from({length:9},(_,k)=>`<line x1="${600+(k-4)*60}" y1="445" x2="${600+(k-4)*260}" y2="660" stroke="#a89a7c" stroke-width="1"/>`).join("")}
+  <line x1="0" y1="500" x2="1200" y2="500" stroke="#a89a7c"/><line x1="0" y1="575" x2="1200" y2="575" stroke="#a89a7c"/>
+  <rect y="436" width="1200" height="10" fill="#9aa08c"/>
+  <!-- 창문 -->
+  <rect x="470" y="50" width="250" height="150" fill="#cfe2ea" stroke="#8d978a" stroke-width="6"/><line x1="595" y1="50" x2="595" y2="200" stroke="#8d978a" stroke-width="5"/>
+  ${Array.from({length:7},(_,k)=>`<rect x="473" y="${56+k*20}" width="244" height="9" fill="#e9eee9" opacity=".85"/>`).join("")}
+  <!-- 게시판·시계·부대 명판 -->
+  <rect x="760" y="70" width="170" height="110" fill="#b48a5a" rx="4"/><rect x="768" y="78" width="154" height="94" fill="#d9c49a"/>
+  <rect x="780" y="88" width="50" height="36" fill="#fff"/><rect x="840" y="92" width="64" height="44" fill="#f4f0d8"/><rect x="786" y="132" width="44" height="30" fill="#e6efe2"/>
+  <circle cx="1010" cy="110" r="34" fill="#fff" stroke="#55604c" stroke-width="5"/><line x1="1010" y1="110" x2="1010" y2="88" stroke="#333" stroke-width="3"/><line x1="1010" y1="110" x2="1026" y2="118" stroke="#333" stroke-width="3"/>
+  <rect x="380" y="62" width="70" height="26" rx="3" fill="#2f3d2b"/><text x="415" y="80" text-anchor="middle" font-size="12" fill="#e6e9e2" font-family="IBM Plex Sans KR,sans-serif" font-weight="600">행정반</text>
+  <!-- 책장 -->
+  <rect x="30" y="170" width="150" height="270" fill="#a87d55" stroke="#6e5240" stroke-width="2"/>
+  ${[0,1,2,3].map(k=>`<rect x="38" y="${180+k*64}" width="134" height="56" fill="#6e5240" opacity=".35"/>${books(38,236+k*64,134)}`).join("")}
+  <!-- 옷장 -->
+  <rect x="192" y="120" width="140" height="320" fill="#c89b6d" stroke="#6e5240" stroke-width="2"/><line x1="262" y1="120" x2="262" y2="440" stroke="#6e5240" stroke-width="2"/>
+  <rect x="250" y="260" width="5" height="40" fill="#3b3b3b"/><rect x="269" y="260" width="5" height="40" fill="#3b3b3b"/><rect x="192" y="430" width="140" height="10" fill="#3b3b3b"/>
+  <!-- 파티션 -->
+  <rect x="360" y="290" width="460" height="150" fill="#7d8b77" stroke="#5d6a58" stroke-width="3"/><line x1="590" y1="290" x2="590" y2="440" stroke="#5d6a58" stroke-width="4"/>
+  <rect x="360" y="284" width="460" height="8" fill="#9aa094"/>
+  <!-- 장병 1, 2 (책상 업무) -->
+  ${sitter(470,300,"#2d3135")}${sitter(705,300,"#3d5a80")}
+  <!-- 책상 2개 -->
+  <rect x="368" y="430" width="210" height="16" fill="#c89b6d" stroke="#6e5240" stroke-width="2"/><rect x="380" y="446" width="186" height="80" fill="#b98c60"/>
+  <rect x="603" y="430" width="210" height="16" fill="#c89b6d" stroke="#6e5240" stroke-width="2"/><rect x="615" y="446" width="186" height="80" fill="#b98c60"/>
+  <rect x="498" y="452" width="60" height="70" fill="#a77d54" stroke="#6e5240"/>${[0,1,2].map(k=>`<rect x="520" y="${462+k*22}" width="16" height="4" fill="#3b3b3b"/>`).join("")}
+  ${paper(440,420)}${paper(670,420)}<rect x="740" y="404" width="30" height="26" fill="#3d5a80"/><rect x="744" y="398" width="30" height="26" fill="#6a8a5a"/>
+  <rect x="470" y="412" width="4" height="22" fill="#222" transform="rotate(30 472 423)"/>
+  <!-- 서류함 + 장병 3 -->
+  <rect x="860" y="270" width="110" height="170" fill="#bfc5c9" stroke="#7b858c" stroke-width="2"/>
+  ${[0,1,2].map(k=>`<rect x="868" y="${278+k*54}" width="94" height="46" fill="#d3d8db" stroke="#7b858c"/><rect x="900" y="${298+k*54}" width="30" height="6" fill="#555"/>`).join("")}
+  <rect x="868" y="386" width="94" height="10" fill="#d3d8db" stroke="#7b858c"/>
+  ${stander(1030,445,`<path d="M1004 255 L978 320 L962 342" stroke="url(#camo)" stroke-width="14" fill="none" stroke-linecap="round"/><circle cx="960" cy="344" r="7" fill="${skin}"/><path d="M1056 255 L1064 318" stroke="url(#camo)" stroke-width="14" fill="none" stroke-linecap="round"/><rect x="1056" y="300" width="26" height="34" fill="#f4f0d8" stroke="#b9b39a"/>`)}
+  <!-- 티테이블 + 회의의자 -->
+  <ellipse cx="1050" cy="560" rx="105" ry="22" fill="#c89b6d" stroke="#6e5240" stroke-width="2"/><rect x="1042" y="572" width="16" height="58" fill="#2d3135"/><ellipse cx="1050" cy="632" rx="44" ry="9" fill="#2d3135"/>
+  <rect x="905" y="520" width="46" height="60" rx="6" fill="#7a2e2e"/><rect x="898" y="574" width="60" height="12" rx="4" fill="#7a2e2e"/><rect x="905" y="586" width="6" height="44" fill="#777"/><rect x="945" y="586" width="6" height="44" fill="#777"/>
+  <rect x="1150" y="520" width="46" height="60" rx="6" fill="#7a2e2e"/><rect x="1143" y="574" width="60" height="12" rx="4" fill="#7a2e2e"/>
+  <rect x="1010" y="540" width="16" height="12" rx="2" fill="#fff"/><rect x="1068" y="538" width="28" height="18" fill="#fff" stroke="#ccc"/>
+  <!-- 앞쪽: 의자 + 사진 찍는 장병 4 -->
+  <rect x="96" y="470" width="92" height="100" rx="14" fill="#2d3135"/>${Array.from({length:5},(_,k)=>`<line x1="${110+k*16}" y1="480" x2="${110+k*16}" y2="560" stroke="#ffffff30"/>`).join("")}
+  <rect x="80" y="568" width="124" height="22" rx="8" fill="#2d3135"/><rect x="136" y="590" width="10" height="34" fill="#777"/>
+  <path d="M141 626 L90 644 M141 626 L192 644 M141 626 L141 650 M141 626 L108 652 M141 626 L174 652" stroke="#555" stroke-width="6" stroke-linecap="round"/>
+  <g stroke="#e0a100" stroke-width="5" fill="none"><path d="M66 476 v-18 h20"/><path d="M216 476 v-18 h-20"/><path d="M66 640 v18 h20"/><path d="M216 640 v18 h-20"/></g>
+  <line x1="70" y1="540" x2="212" y2="540" stroke="#e0a100" stroke-width="2" stroke-dasharray="6 4"/>
+  ${stander(330,655,`<path d="M306 512 L270 520 L246 520" stroke="url(#camo)" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M354 512 L330 540 L262 526" stroke="url(#camo)" stroke-width="14" fill="none" stroke-linecap="round"/><rect x="226" y="498" width="22" height="40" rx="4" fill="#1b1b1b"/><rect x="229" y="502" width="16" height="30" rx="2" fill="#7fc4e8"/><circle cx="252" cy="520" r="7" fill="${skin}"/>`)}
+  <g><rect x="40" y="410" width="196" height="46" rx="8" fill="#1d2a17"/><text x="56" y="430" font-size="12" fill="#cfe0c4" font-family="IBM Plex Sans KR,sans-serif">AI 분석 결과</text><rect x="56" y="436" width="46" height="16" rx="8" fill="#f8eed8"/><text x="79" y="448" text-anchor="middle" font-size="11" font-weight="700" fill="#b07a12" font-family="IBM Plex Sans KR,sans-serif">C급</text><text x="110" y="449" font-size="12.5" font-weight="700" fill="#fff" font-family="IBM Plex Sans KR,sans-serif">요정비 · 실린더</text></g>
+  <!-- 콜아웃 -->
+  ${co(1,470,470,"책상","책상",0,0).replace('x="466"','x="466"')}
+  ${co(2,100,600,"의자","의자",-88,0)}
+  ${co(3,262,180,"옷장","옷장",0,-40)}
+  ${co(4,915,300,"서류함","서류함",-10,-60)}
+  ${co(5,1000,560,"티테이블","티테이블",-150,40)}
+  ${co(6,590,330,"파티션","파티션",0,-60)}
+  ${co(7,105,200,"책장","책장",-80,-50)}
+  </svg>`;
+}
+function renderHome(){
+  $("officeScene").innerHTML=officeSVG();
+  $("officeScene").querySelectorAll(".co").forEach(g=>{const go=()=>{bCat=g.dataset.c;bProd="";location.hash="dashboard";renderDashboard();}; g.addEventListener("click",go); g.addEventListener("keydown",e=>{if(e.key==="Enter")go();});});
+  const scrap=items.filter(i=>i.verdict==="폐품").length, fix=items.filter(i=>i.verdict==="요정비"), cost=fix.reduce((a,i)=>a+(Number(i.repairCost)||0),0);
+  $("homeStats").innerHTML=`<div class="hstat T"><span class="label">관리 품목 · 제품 종류</span><span class="v">${catNames().length}종 · ${products.length}종</span></div>
+    <div class="hstat T"><span class="label">보유 비품</span><span class="v">${items.length}점</span></div>
+    <div class="hstat C"><span class="label">요정비 · 예상 정비비</span><span class="v">${fix.length}점 · ${won(cost)}</span></div>
+    <div class="hstat D"><span class="label">폐품 판정</span><span class="v">${scrap}점</span></div>`;
+}
+/* ---------- 배포판: Supabase 저장소 + 로그인 ---------- */
+const SupaDB=(()=>{
+  const ls={}, cache={}, T="records";
+  const snap=n=>({metadata:{fromCache:false},docs:(cache[n]||[]).map(r=>({id:r.id,data:()=>r.data}))});
+  const emit=n=>(ls[n]||[]).forEach(cb=>cb(snap(n)));
+  async function load(n){ const {data,error}=await sbClient.from(T).select("id,data").eq("coll",n).order("created_at"); if(error) throw error; cache[n]=data||[]; emit(n); }
+  let rt=false;
+  function realtime(){ if(rt) return; rt=true;
+    sbClient.channel("records-live").on("postgres_changes",{event:"*",schema:"public",table:T},p=>{ const n=p.new?.coll||p.old?.coll; if(n&&ls[n]) load(n).catch(()=>{}); else Object.keys(ls).forEach(k=>load(k).catch(()=>{})); }).subscribe(); }
+  const fail=e=>({code:(e&&(e.code==="42501"||/permission|policy/i.test(e.message||"")))?"permission_denied":"unavailable",message:e?.message});
+  return {
+    collection:n=>({
+      async add(d){ const {data,error}=await sbClient.from(T).insert({coll:n,data:d}).select("id").single(); if(error) throw fail(error); await load(n); return {id:data.id}; },
+      onSnapshot(cb,err){ (ls[n]=ls[n]||[]).push(cb); realtime(); load(n).catch(e=>err&&err(fail(e))); return ()=>{}; } }),
+    doc:path=>{ const [n,id]=path.split("/"); return { async delete(){ const {error}=await sbClient.from(T).delete().eq("id",id); if(error) throw fail(error); await load(n); } }; }
+  };
+})();
+function ensureLogin(){
+  sbClient = sbClient || window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
+  return new Promise(async resolve=>{
+    const done=u=>{ $("authGate").hidden=true; $("who").hidden=false; $("whoMail").textContent=u.email||""; resolve(u); };
+    const {data}=await sbClient.auth.getSession();
+    if(data.session){ done(data.session.user); return; }
+    $("authGate").hidden=false;
+    const msg=t=>$("authMsg").textContent=t;
+    const go=async mode=>{
+      const email=$("authEmail").value.trim(), password=$("authPw").value;
+      if(!email||password.length<6){ msg("이메일과 6자 이상 비밀번호를 입력하세요."); return; }
+      msg(mode==="up"?"가입하는 중…":"로그인하는 중…");
+      const r= mode==="up"? await sbClient.auth.signUp({email,password}) : await sbClient.auth.signInWithPassword({email,password});
+      if(r.error){ msg(mode==="up"?"가입하지 못했습니다: "+r.error.message:"이메일 또는 비밀번호가 맞지 않습니다."); return; }
+      if(!r.data.session){ msg("가입 확인 메일을 보냈습니다. 메일의 링크를 누른 뒤 로그인하세요."); return; }
+      done(r.data.user);
+    };
+    $("authForm").onsubmit=e=>{e.preventDefault();go("in");};
+    $("authSignup").onclick=()=>go("up");
+  });
+}
+if(SUPA){ $("logoutBtn").onclick=async()=>{ await sbClient.auth.signOut(); location.reload(); }; }
+
+/* ---------- 로컬 미리보기 모드 (claude.ai 밖에서 파일로 열 때) ---------- */
+const SEED = {"products": [{"id": "p0", "category": "책상", "maker": "예시) 가나가구", "model": "일자형 책상 GD-1200", "spec": "1200×700×720", "price": 185000, "variant": 0, "material": "메이플 / 철제 다리", "example": true}, {"id": "p1", "category": "책상", "maker": "예시) 다온오피스", "model": "서랍형 책상 DO-1400", "spec": "1400×700×720", "price": 265000, "variant": 1, "material": "화이트 / 서랍 3단", "example": true}, {"id": "p2", "category": "책상", "maker": "예시) 라온퍼니처", "model": "L자형 책상 LF-1600", "spec": "1600×1400×720", "price": 420000, "variant": 2, "material": "월넛 / 철제 다리", "example": true}, {"id": "p3", "category": "책상", "maker": "예시) 마루데스크", "model": "높이조절 책상 MD-M1", "spec": "1400×700×650~1250", "price": 590000, "variant": 3, "material": "오크 / 전동 프레임", "example": true}, {"id": "p4", "category": "의자", "maker": "예시) 가나가구", "model": "메쉬 하이백 GC-700", "spec": "W650×D620", "price": 210000, "variant": 0, "material": "블랙 메쉬", "example": true}, {"id": "p5", "category": "의자", "maker": "예시) 바른시팅", "model": "로우백 사무용 BS-30", "spec": "W600×D580", "price": 98000, "variant": 1, "material": "네이비 패브릭", "example": true}, {"id": "p6", "category": "의자", "maker": "예시) 다온오피스", "model": "회의용 4발 DO-C4", "spec": "W550×D540", "price": 72000, "variant": 2, "material": "레드 패브릭", "example": true}, {"id": "p7", "category": "의자", "maker": "예시) 사계체어", "model": "중역용 팔걸이 SG-E9", "spec": "W700×D700", "price": 380000, "variant": 3, "material": "그레이 인조가죽", "example": true}, {"id": "p8", "category": "옷장", "maker": "예시) 가나가구", "model": "2도어 옷장 GW-800", "spec": "800×600×1800", "price": 310000, "variant": 0, "material": "오크 무늬목", "example": true}, {"id": "p9", "category": "옷장", "maker": "예시) 라온퍼니처", "model": "3도어 옷장 LW-1200", "spec": "1200×600×1800", "price": 420000, "variant": 1, "material": "메이플 무늬목", "example": true}, {"id": "p10", "category": "옷장", "maker": "예시) 한결스틸", "model": "철제 6인 락커 HS-L6", "spec": "900×450×1800", "price": 350000, "variant": 2, "material": "그레이 철제", "example": true}, {"id": "p11", "category": "서류함", "maker": "예시) 한결스틸", "model": "3단 서랍 HS-F3", "spec": "400×620×1020", "price": 165000, "variant": 0, "material": "그레이 철제", "example": true}, {"id": "p12", "category": "서류함", "maker": "예시) 다온오피스", "model": "4단 서랍 DO-F4", "spec": "460×620×1330", "price": 230000, "variant": 1, "material": "화이트 무늬목", "example": true}, {"id": "p13", "category": "서류함", "maker": "예시) 가나가구", "model": "이동식 서랍 GD-P3", "spec": "400×580×600", "price": 89000, "variant": 2, "material": "다크그레이 철제", "example": true}, {"id": "p14", "category": "서류함", "maker": "예시) 한결스틸", "model": "2도어 철제캐비닛 HS-C2", "spec": "900×450×1800", "price": 280000, "variant": 3, "material": "그레이 철제", "example": true}, {"id": "p15", "category": "티테이블", "maker": "예시) 라온퍼니처", "model": "원형 티테이블 LT-800", "spec": "Ø800×720", "price": 140000, "variant": 0, "material": "내추럴 원목", "example": true}, {"id": "p16", "category": "티테이블", "maker": "예시) 가나가구", "model": "사각 회의테이블 GT-1200", "spec": "1200×800×720", "price": 190000, "variant": 1, "material": "메이플 / 철제 다리", "example": true}, {"id": "p17", "category": "티테이블", "maker": "예시) 마루데스크", "model": "소파 테이블 MT-L1", "spec": "1000×500×450", "price": 120000, "variant": 2, "material": "월넛 무늬목", "example": true}, {"id": "p18", "category": "파티션", "maker": "예시) 바른시팅", "model": "패브릭 파티션 BP-1200", "spec": "1200×30×1200", "price": 95000, "variant": 0, "material": "그린 패브릭", "example": true}, {"id": "p19", "category": "파티션", "maker": "예시) 라온퍼니처", "model": "상단 글라스 파티션 LP-G", "spec": "1200×30×1500", "price": 160000, "variant": 1, "material": "블루 패브릭 + 유리", "example": true}, {"id": "p20", "category": "파티션", "maker": "예시) 다온오피스", "model": "3연결 파티션 DO-P3", "spec": "3000×30×1200", "price": 260000, "variant": 2, "material": "베이지 패브릭", "example": true}, {"id": "p21", "category": "책장", "maker": "예시) 가나가구", "model": "3단 오픈 책장 GB-3", "spec": "800×300×1200", "price": 85000, "variant": 0, "material": "오크 무늬목", "example": true}, {"id": "p22", "category": "책장", "maker": "예시) 라온퍼니처", "model": "5단 슬림 책장 LB-5", "spec": "600×300×1800", "price": 110000, "variant": 1, "material": "메이플 무늬목", "example": true}, {"id": "p23", "category": "책장", "maker": "예시) 다온오피스", "model": "하부도어 책장 DO-BD", "spec": "800×400×1800", "price": 175000, "variant": 2, "material": "화이트 무늬목", "example": true}], "items": [{"id": "i0", "productId": "p1", "category": "책상", "maker": "예시) 다온오피스", "model": "서랍형 책상 DO-1400", "price": 265000, "lifeYears": 10, "serial": "24-가구-0101", "unit": "○○대대 본부", "acquiredAt": "2019-03-02", "grade": "C", "verdict": "요정비", "repairCost": 60000, "defects": [{"part": "서랍 레일", "issue": "2단 서랍 레일 휨으로 닫히지 않음", "severity": "보통", "method": "레일 교체", "cost": 35000}, {"part": "상판 모서리", "issue": "모서리 들뜸", "severity": "경미", "method": "엣지 재접착", "cost": 25000}], "summary": "서랍 레일 휨, 상판 엣지 들뜸", "example": true, "createdAt": 1794272761593, "analyzedAt": 1794272761593}, {"id": "i1", "productId": "p1", "category": "책상", "maker": "예시) 다온오피스", "model": "서랍형 책상 DO-1400", "price": 265000, "lifeYears": 10, "serial": "24-가구-0102", "unit": "○○대대 본부", "acquiredAt": "2023-03-02", "grade": "A", "verdict": "사용", "repairCost": 0, "defects": [], "summary": "", "example": true, "createdAt": 1794272761592, "analyzedAt": 1794272761593}, {"id": "i2", "productId": "p1", "category": "책상", "maker": "예시) 다온오피스", "model": "서랍형 책상 DO-1400", "price": 265000, "lifeYears": 10, "serial": "24-가구-0103", "unit": "작전과", "acquiredAt": "2021-05-11", "grade": "B", "verdict": "사용", "repairCost": 0, "defects": [], "summary": "", "example": true, "createdAt": 1794272761591, "analyzedAt": 1794272761593}, {"id": "i3", "productId": "p1", "category": "책상", "maker": "예시) 다온오피스", "model": "서랍형 책상 DO-1400", "price": 265000, "lifeYears": 10, "serial": "24-가구-0104", "unit": "인사과", "acquiredAt": "2014-04-01", "grade": "D", "verdict": "폐품", "repairCost": 120000, "defects": [{"part": "상판", "issue": "상판 갈라짐과 수분 팽창", "severity": "심각", "method": "상판 교체", "cost": 120000}], "summary": "상판 파손, 내용연수 경과", "example": true, "createdAt": 1794272761590, "analyzedAt": 1794272761593}, {"id": "i4", "productId": "p0", "category": "책상", "maker": "예시) 가나가구", "model": "일자형 책상 GD-1200", "price": 185000, "lifeYears": 10, "serial": "24-가구-0201", "unit": "행정반", "acquiredAt": "2022-02-10", "grade": "B", "verdict": "사용", "repairCost": 0, "defects": [], "summary": "", "example": true, "createdAt": 1794272761589, "analyzedAt": 1794272761593}, {"id": "i5", "productId": "p4", "category": "의자", "maker": "예시) 가나가구", "model": "메쉬 하이백 GC-700", "price": 210000, "lifeYears": 8, "serial": "24-가구-0301", "unit": "정보통신중대", "acquiredAt": "2020-07-01", "grade": "C", "verdict": "요정비", "repairCost": 55000, "defects": [{"part": "가스실린더", "issue": "높이 고정 안 됨", "severity": "보통", "method": "가스실린더 교체", "cost": 35000}, {"part": "캐스터", "issue": "바퀴 1개 파손", "severity": "경미", "method": "캐스터 교체", "cost": 20000}], "summary": "", "example": true, "createdAt": 1794272761588, "analyzedAt": 1794272761593}, {"id": "i6", "productId": "p5", "category": "의자", "maker": "예시) 바른시팅", "model": "로우백 사무용 BS-30", "price": 98000, "lifeYears": 8, "serial": "24-가구-0302", "unit": "행정반", "acquiredAt": "2016-01-01", "grade": "D", "verdict": "폐품", "repairCost": 90000, "defects": [{"part": "좌판", "issue": "좌판 프레임 파손", "severity": "심각", "method": "좌판 교체", "cost": 90000}], "summary": "", "example": true, "createdAt": 1794272761587, "analyzedAt": 1794272761593}, {"id": "i7", "productId": "p11", "category": "서류함", "maker": "예시) 한결스틸", "model": "3단 서랍 HS-F3", "price": 165000, "lifeYears": 12, "serial": "24-가구-0401", "unit": "군수과", "acquiredAt": "2018-09-09", "grade": "B", "verdict": "사용", "repairCost": 0, "defects": [], "summary": "", "example": true, "createdAt": 1794272761586, "analyzedAt": 1794272761593}, {"id": "i8", "productId": "p15", "category": "티테이블", "maker": "예시) 라온퍼니처", "model": "원형 티테이블 LT-800", "price": 140000, "lifeYears": 10, "serial": "24-가구-0501", "unit": "대대장실", "acquiredAt": "2023-11-01", "grade": "A", "verdict": "사용", "repairCost": 0, "defects": [], "summary": "", "example": true, "createdAt": 1794272761585, "analyzedAt": 1794272761593}], "vendors": [{"id": "v_atgagu", "name": "올댓가구수리", "phone": "010-8859-4992", "addr": "서울 강동구 상일로 74", "region": "서울 전역, 경기 전역 (인천 포함)", "trip": "30,000원 (서울 도심·동남권, 구리·하남·성남·과천) / 40,000원 (서울 서북·동북권, 수원·용인·안양 등) / 50,000원 (고양·파주·화성·부천 등, 인천)", "hours": "09:00~18:00, 일요일 휴무", "warranty": "시공 완료일로부터 30일", "fields": ["책상", "의자", "서류함", "옷장"], "feature": "가정·사무실 방문 수리 업체. 사무용 책상 서랍·문짝, 의자(바퀴·5발·쇼바·천갈이), 캐비닛 경첩·잠금장치를 현장에서 바로 시공합니다.", "pros": ["사무용 품목별 표준 견적을 공개", "서울·경기 전 지역 출장, 지역별 출장비 명확", "현장 즉시 시공, 카드·계좌이체 결제"], "cons": ["A/S 보증 30일로 짧은 편", "파티션·책장은 수리 품목에 명시 없음", "표준견적에 없는 품목은 별도 문의"], "tech": "업체 소개 기준 21년 경력, 정직원 시공 (관공서·기업 실적 공개 없음)", "rates": [{"work": "의자 캐스터 5개 세트", "price": 20000}, {"work": "의자 5발 (캐스터 포함)", "price": 50000, "from": true}, {"work": "의자 쇼바(가스실린더)", "price": 50000, "from": true}, {"work": "책상 레자 교체", "price": 70000, "from": true}, {"work": "책상 파손 재조립", "price": 50000, "from": true}, {"work": "서랍장 시건(잠금)장치", "price": 30000, "from": true}, {"work": "캐비닛 경첩 (도어당)", "price": 20000, "from": true}, {"work": "전자키", "price": 80000, "from": true}, {"work": "서랍 레일 2개 세트", "price": 10000}, {"work": "옷장 옷봉 (미터당)", "price": 30000, "from": true}], "url": "https://www.atgagu.com/", "checked": "2026-11-10"}, {"id": "v_suridam", "name": "수리담", "phone": "010-9127-3024", "addr": "서울 영등포구 선유서로21길 14, 2층", "region": "서울·인천·경기 (서울 서남권, 부천·김포·광명·시흥 등)", "trip": "30,000원 (품목별 총액에 포함된 경우 있음)", "hours": "매일 09:00~21:00 (사진 상담 24시간)", "warranty": "1년 무상 A/S", "fields": ["의자", "옷장", "티테이블"], "feature": "가정용 가구 출장 수리 중심 업체. 의자 다리·흔들림·천갈이, 장 문짝·경첩, 서랍 레일, 식탁(테이블) 다리 수리를 합니다.", "pros": ["사진 1장으로 사전 진단, 수리 불가 시 출장비 없음", "1년 무상 A/S", "주 7일 상담"], "cons": ["사무용 책상·캐비닛·파티션은 수리 품목에 명시 없음", "서울 서남권·인천 위주, 경기 동부·북부는 확인 필요", "단가가 가정용 가구 기준"], "tech": "업체 소개 기준 연 1,200건 출장, 가구회사 생산라인 출신 기사, 네이버 평점 4.9 (업체 게시 내용)", "rates": [{"work": "나무의자 다리 부러짐 (개당, 출장비 별도)", "price": 30000}, {"work": "나무의자 흔들림 (개당, 출장비 별도)", "price": 20000}, {"work": "의자 인조가죽 천갈이 (개당, 출장비 별도)", "price": 30000}, {"work": "서랍 볼레일·철레일 교체", "price": 50000}, {"work": "장 경첩 교체 (180도)", "price": 60000}, {"work": "장 문짝 떨어짐", "price": 50000}, {"work": "식탁(테이블) 다리 수리·흔들림", "price": 80000}], "url": "https://suridam.co.kr/", "checked": "2026-11-10"}, {"id": "v_srs", "name": "상록수의자", "phone": "031-417-1150", "addr": "경기 화성시 남양로 182", "region": "매장 방문·픽업 (출장 여부 문의)", "trip": "", "hours": "평일 09:00~18:00", "warranty": "", "fields": ["의자"], "feature": "사무용 의자 제조·유통·수리 업체. 천갈이, 등판·방석, 중심봉, 다리, 바퀴 등 의자 부품을 직접 판매합니다.", "pros": ["의자 부품을 직접 보유·판매 (예: 캐스터 개당 1,800원)", "의자 제조까지 하는 전문 업체"], "cons": ["의자 외 품목은 수리하지 않음", "출장 수리 여부와 수리 공임은 공개되어 있지 않음"], "tech": "업체 소개 기준 사무용 가구 20년 업력", "rates": [{"work": "의자 캐스터 부품 (개당)", "price": 1800}, {"work": "수리 공임", "price": 0, "note": "견적 문의"}], "url": "https://srs01.com/", "checked": "2026-11-10"}]};
+const LocalDB = (()=>{
+  const KEY="saomubipum-local-v2"; let data, ls={};
+  try{ data=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
+  if(!data){ data={categories:{},products:{},items:{},vendors:{}};
+    ["products","items","vendors"].forEach(n=>SEED[n].forEach((d,k)=>{ const id=d.id||(n[0]+k); data[n][id]={...d}; delete data[n][id].id; })); }
+  const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(data)); }catch(e){ toast("브라우저 저장공간이 가득 찼습니다. 사진 수를 줄여주세요."); } };
+  const snap=n=>({metadata:{fromCache:false},docs:Object.entries(data[n]||{}).map(([id,d])=>({id,data:()=>d}))});
+  const emit=n=>(ls[n]||[]).forEach(cb=>cb(snap(n)));
+  return {
+    collection:n=>({ async add(d){ const id=n[0]+Date.now().toString(36)+Math.random().toString(36).slice(2,6); (data[n]=data[n]||{})[id]=d; save(); emit(n); return {id}; },
+      onSnapshot(cb){ (ls[n]=ls[n]||[]).push(cb); setTimeout(()=>cb(snap(n)),0); return ()=>{}; } }),
+    doc:path=>{ const [n,id]=path.split("/"); return { async delete(){ delete data[n][id]; save(); emit(n); } }; },
+    reset(){ try{ localStorage.removeItem(KEY); }catch(e){} location.reload(); }
+  };
+})();
+/* 배포판: Vercel 서버 함수로 사진 분석. API 키가 없으면 예시 결과 */
+async function serverAnalyze(prompt,info){
+  const imgs=shotBig.filter(Boolean).map(u=>u.split(",")[1]);
+  let token=""; try{ token=(await sbClient.auth.getSession()).data.session?.access_token||""; }catch(e){}
+  let res;
+  try{ res=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({prompt,images:imgs})}); }
+  catch(e){ throw {code:"network"}; }
+  if(res.status===501){ const n=$("aiNote"); n.hidden=false; n.className="notice warn"; n.textContent="AI 키가 아직 설정되지 않아 예시 결과를 보여줍니다. 관리자가 Vercel에 ANTHROPIC_API_KEY를 넣으면 실제 사진 분석으로 바뀝니다."; return demoAnalyze(info); }
+  if(res.status===401) throw {code:"not_granted"};
+  if(res.status===429) throw {code:"rate_limited"};
+  if(!res.ok) throw {code:"server"};
+  return await res.json();
+}
+let demoTurn=0;
+async function demoAnalyze(info){
+  await new Promise(r=>setTimeout(r,1200));
+  const cr=critFor(info.category); const scrapCase=(demoTurn++%2===0);
+  const D={"책상":[["서랍 레일","서랍이 끝까지 닫히지 않음","보통","서랍 레일 교체",35000],["상판","상판 앞쪽 갈라짐","심각","상판 교체",120000]],
+    "의자":[["가스실린더","높이가 고정되지 않음","보통","가스실린더 교체",35000],["베이스","5발 다리 한쪽 균열","심각","베이스 교체",60000]],
+    "옷장":[["도어 경첩","문이 처져 닫힘 불량","보통","경첩 교체",22000],["하판","하판 수분 팽창","심각","하판 교체",90000]],
+    "서류함":[["잠금장치","열쇠가 돌아가지 않음","보통","잠금장치 교체",28000],["몸체","측면 찌그러짐","심각","몸체 판금",80000]],
+    "티테이블":[["상판","표면 코팅 손상","보통","연마·코팅",40000],["기둥","기둥 용접부 균열","심각","기둥 교체",70000]],
+    "파티션":[["패브릭","천 찢어짐","보통","패브릭 재부착",45000],["프레임","프레임 휨","심각","프레임 교체",80000]],
+    "책장":[["선반","선반 처짐","보통","선반 받침 교체",15000],["측판","측판 갈라짐","심각","측판 교체",70000]]};
+  const rows=(D[info.category]||[["외관","긁힘","보통","보수",20000],["본체","파손","심각","교체",80000]]);
+  const use=scrapCase?rows:[rows[0]];
+  const matched=[{code:cr.C[0]?.code,evidence:"[예시] "+rows[0][1]}]; if(scrapCase&&cr.D[0]) matched.push({code:cr.D[0].code,evidence:"[예시] "+rows[1][1]});
+  return {grade:scrapCase?"D":"C",confidence:0.5,summary:"[로컬 예시 결과] 실제 사진 분석이 아닌 화면 확인용 예시입니다. 다시 누르면 "+(scrapCase?"요정비":"폐품")+" 사례가 나옵니다.",
+    matched,defects:use.map(x=>({part:x[0],issue:x[1],severity:x[2],method:x[3],cost:x[4]})),notes:"claude.ai에 올리면 실제 사진을 분석합니다."};
+}
+if(LOCAL && !SUPA){ const f=document.createElement("div"); f.className="wrap"; f.style.paddingBlock="0 30px";
+  f.innerHTML='<div class="notice" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">로컬 미리보기 모드 · 입력한 내용은 이 브라우저에만 저장됩니다. <button class="small ghost" id="localReset">예시 데이터로 초기화</button><span id="lrMsg"></span></div>';
+  document.body.appendChild(f); let armed=false;
+  $("localReset").onclick=()=>{ if(!armed){armed=true;$("lrMsg").textContent="한 번 더 누르면 입력한 데이터가 모두 지워집니다.";return;} LocalDB.reset(); }; }
+
+renderDashboard(); renderVendors(); renderHome(); route();
+(async()=>{
+  const note=$("dbNote");
+  if(SUPA){ note.hidden=true; const u=await ensureLogin(); me=u.id; db=SupaDB; }
+  else if(LOCAL){ db=LocalDB; } else { try{ db=await claude.use("db"); }catch(e){ db=null; } }
+  if(!db){ note.hidden=false; note.textContent="저장소에 연결할 수 없습니다. claude.ai에 로그인한 상태로 열면 비품 목록이 보입니다."; return; }
+  if(!LOCAL && !SUPA) try{ const u=await claude.use("user"); me=u?await u.id():null; }catch(e){}
+  let timer=setTimeout(()=>{note.hidden=false;note.textContent="비품 목록을 불러오는 중입니다. 연결이 느리면 잠시 후 다시 확인하세요.";},10000);
+  note.hidden=false; note.innerHTML='<span class="spin"></span> 비품 목록을 불러오는 중…';
+  db.collection("items").onSnapshot(s=>{
+    if(!s.metadata?.fromCache){ clearTimeout(timer); note.hidden=true; }
+    items=s.docs.map(d=>({id:d.id,...d.data()})); renderDashboard(); renderHome();
+  },e=>{ clearTimeout(timer); note.hidden=false; note.className="notice err"; note.textContent="비품 목록을 불러오지 못했습니다. 페이지를 다시 열어주세요."; });
+  db.collection("categories").onSnapshot(s=>{ CATS={...DEFAULT_CATS}; s.docs.forEach(d=>{const x=d.data(); if(x.name) CATS[x.name]=x.life||10;}); catsChanged(); },()=>{});
+  db.collection("products").onSnapshot(s=>{ products=s.docs.map(d=>({id:d.id,...d.data()})); fillProdOptions(); renderDashboard(); renderHome(); },()=>{});
+  db.collection("refs").onSnapshot(s=>{ const t={}; s.docs.map(d=>d.data()).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).forEach(x=>{ if(x.key&&x.photo) t[x.key]=x.photo; }); refs=t; renderCriteria(); },()=>{});
+  db.collection("vendors").onSnapshot(s=>{ vendors=s.docs.map(d=>({id:d.id,...d.data()})); renderVendors(); renderDashboard(); },()=>{});
+})();
+</script>
+</body></html>
