@@ -6,9 +6,6 @@ export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store, max-age=0");
   res.setHeader("X-Content-Type-Options", "nosniff");
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) return res.status(501).json({ error: "no_key" });
-
   // 익명 계정이 아닌 승인된 사용자만 사용한다. 화면 제한을 우회한 직접 호출도 서버에서 차단한다.
   const auth = req.headers.authorization || "";
   const userResponse = await fetch(SUPABASE_URL + "/auth/v1/user", { headers: { Authorization: auth, apikey: SUPABASE_ANON_KEY } });
@@ -25,6 +22,9 @@ export default async function handler(req, res) {
   const profile = profiles?.[0];
   if (!profile || profile.status !== "approved" || !["member", "unit_admin", "super"].includes(profile.role))
     return res.status(403).json({ error: "not_granted" });
+
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return res.status(501).json({ error: "no_key" });
 
   const { prompt, images } = req.body || {};
   if (typeof prompt !== "string" || prompt.length > 12000 || !Array.isArray(images) || !images.length || images.length > 4)
