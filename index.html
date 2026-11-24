@@ -1064,6 +1064,25 @@ td{font-size:15px}
 @media(max-width:720px){.executive-hero{padding:0 0 20px!important}.eh-grid{border-radius:0!important}.eh-copy{padding:54px 22px 42px!important}.eh-command-links{grid-template-columns:1fr}.eh-actions{width:100%}.service-dock{grid-template-columns:1fr;padding:0 16px;margin-bottom:52px}.service-dock a{min-height:98px}.eh-visual img{min-height:500px!important}.lp-hero{border-radius:0!important}}
 </style>
 
+<style id="design-v8-overlapping-editorial-photos">
+/* Three-scene editorial photo composition. */
+.eh-visual{min-height:700px!important;background:linear-gradient(145deg,#dfe3e1 0%,#f3f1ec 100%)!important;overflow:hidden!important}
+.eh-photo-stack{position:absolute;inset:30px 24px 66px;isolation:isolate}
+.eh-photo-stack .eh-photo{position:absolute!important;display:block!important;min-height:0!important;object-fit:cover!important;filter:saturate(.82) contrast(1.02)!important;border:7px solid #fff;border-radius:16px;box-shadow:0 22px 46px rgba(20,25,30,.2);transition:transform .35s ease,box-shadow .35s ease}
+.eh-photo-stack .eh-photo-main{z-index:1;top:0;right:0;width:86%!important;height:76%!important;object-position:58% center!important}
+.eh-photo-stack .eh-photo-filing{z-index:3;left:0;bottom:0;width:49%!important;height:40%!important;object-position:55% center!important}
+.eh-photo-stack .eh-photo-meeting{z-index:2;right:2%;bottom:0;width:52%!important;height:37%!important;object-position:center center!important}
+.eh-photo-stack:hover .eh-photo-main{transform:translateY(-4px)}
+.eh-photo-stack:hover .eh-photo-filing{transform:translate(-3px,3px)}
+.eh-photo-stack:hover .eh-photo-meeting{transform:translate(3px,3px)}
+.eh-visual .eh-caption{z-index:5;left:18px!important;right:auto!important;top:18px!important;bottom:auto!important;max-width:290px;border-radius:12px!important;padding:14px 17px!important;display:block!important}
+.eh-visual .eh-caption span{display:block;margin-top:3px}
+.eh-visual::after{display:none!important}
+
+@media(max-width:1100px){.eh-visual{min-height:680px!important}.eh-photo-stack{inset:28px 24px 62px}.eh-photo-stack .eh-photo-main{width:84%!important}}
+@media(max-width:720px){.eh-visual{min-height:590px!important}.eh-photo-stack{inset:22px 12px 46px}.eh-photo-stack .eh-photo{border-width:5px;border-radius:12px}.eh-photo-stack .eh-photo-main{width:92%!important;height:72%!important}.eh-photo-stack .eh-photo-filing{width:54%!important;height:36%!important}.eh-photo-stack .eh-photo-meeting{width:52%!important;height:34%!important}.eh-visual .eh-caption{left:10px!important;top:10px!important;max-width:250px}}
+</style>
+
 <header class="top"><div class="wrap">
   <div class="brand"><div class="mark">비품</div><div>비품비서<small>효율적 OA사무비품 재산관리</small></div></div>
   <div id="who" hidden style="font-size:12px;opacity:.85;display:flex;gap:6px;align-items:center"><span id="whoMail"></span><button class="small ghost" id="logoutBtn" style="color:inherit;border-color:rgba(255,255,255,.3);padding:3px 8px">로그아웃</button></div>
@@ -1348,7 +1367,11 @@ td{font-size:15px}
         </div>
       </div>
       <figure class="eh-visual">
-        <img src="/assets/office-furniture-soldiers-v2.svg" alt="실제 군인들이 사무실에서 책상, 의자, 서류함과 파티션을 점검하는 모습">
+        <div class="eh-photo-stack">
+          <img class="eh-photo eh-photo-main" src="/assets/office-furniture-soldiers-v2.svg" alt="군인들이 사무실 의자와 비품을 점검하는 모습">
+          <img class="eh-photo eh-photo-filing" src="/assets/office-furniture-filing-v1.svg" alt="군인들이 서류함과 수납장을 점검하는 모습">
+          <img class="eh-photo eh-photo-meeting" src="/assets/office-furniture-meeting-v1.svg" alt="군인들이 회의용 책상과 의자를 점검하는 모습">
+        </div>
         <figcaption class="eh-caption"><b>현장 중심 사무비품 관리</b><span>촬영 · 판정 · 정비 · 자산 현황</span></figcaption>
       </figure>
     </div>
