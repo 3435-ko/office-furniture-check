@@ -4,6 +4,8 @@
 const SUPABASE_URL = process.env.SUPABASE_URL || "https://ihcomdxdbfgagmwooait.supabase.co";
 
 export default async function handler(req, res) {
+  res.setHeader("Cache-Control", "no-store, max-age=0");
+  res.setHeader("X-Content-Type-Options", "nosniff");
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
   const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) return res.status(501).json({ error: "no_key" });
@@ -15,7 +17,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "bad_request" });
 
   const q = await fetch(`${SUPABASE_URL}/rest/v1/qr_logins?id=eq.${id}&secret=eq.${secret}&select=*`, { headers: H });
-  if (!q.ok) return res.status(502).json({ error: "db", detail: (await q.text()).slice(0, 200) });
+  if (!q.ok) return res.status(502).json({ error: "db" });
   const row = (await q.json())[0];
   if (!row) return res.status(404).json({ error: "not_found" });
   if (row.status !== "approved" || !row.email) return res.status(409).json({ error: row.status });
@@ -30,7 +32,7 @@ export default async function handler(req, res) {
   const g = await fetch(`${SUPABASE_URL}/auth/v1/admin/generate_link`, {
     method: "POST", headers: H, body: JSON.stringify({ type: "magiclink", email: row.email }),
   });
-  if (!g.ok) return res.status(502).json({ error: "auth", detail: (await g.text()).slice(0, 200) });
+  if (!g.ok) return res.status(502).json({ error: "auth" });
   const link = await g.json();
   const token_hash = link.hashed_token || link.properties?.hashed_token;
   if (!token_hash) return res.status(502).json({ error: "no_token" });
