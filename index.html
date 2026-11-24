@@ -1083,6 +1083,54 @@ td{font-size:15px}
 @media(max-width:720px){.eh-visual{min-height:590px!important}.eh-photo-stack{inset:22px 12px 46px}.eh-photo-stack .eh-photo{border-width:5px;border-radius:12px}.eh-photo-stack .eh-photo-main{width:92%!important;height:72%!important}.eh-photo-stack .eh-photo-filing{width:54%!important;height:36%!important}.eh-photo-stack .eh-photo-meeting{width:52%!important;height:34%!important}.eh-visual .eh-caption{left:10px!important;top:10px!important;max-width:250px}}
 </style>
 
+<style id="design-v9-large-left-navigation">
+/* Large left-side application navigation for desktop work. */
+@media(min-width:1050px){
+  header.top{
+    position:fixed!important;left:0!important;top:0!important;bottom:0!important;width:272px!important;height:100vh!important;
+    background:#fff!important;border:0!important;border-right:1px solid #e1e4e2!important;box-shadow:none!important;overflow:hidden!important;z-index:30!important
+  }
+  header.top .wrap{
+    width:100%!important;max-width:none!important;height:100%!important;min-height:0!important;margin:0!important;padding:28px 18px 22px!important;
+    display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:0!important;flex-wrap:nowrap!important
+  }
+  header.top .brand{width:100%!important;margin:0!important;padding:0 10px 24px!important;border-bottom:1px solid #e7e9e8!important;gap:13px!important;font-size:20px!important}
+  header.top .brand .mark{width:46px!important;height:46px!important;border:0!important;border-radius:14px!important;background:#176b4e!important;color:#fff!important;font-size:12px!important}
+  header.top .brand small{display:block!important;font-size:14px!important;color:#777d83!important;margin-top:3px!important}
+  header.top nav.tabs{
+    order:2!important;width:100%!important;margin:22px 0 0!important;padding:0!important;display:flex!important;flex:1 1 auto!important;
+    flex-direction:column!important;align-items:stretch!important;gap:7px!important;overflow-y:auto!important;overflow-x:hidden!important
+  }
+  header.top nav.tabs::before{content:"업무 메뉴";padding:0 13px 7px;color:#8a8f95;font-size:14px;font-weight:700;letter-spacing:.04em}
+  header.top nav.tabs a{
+    position:relative!important;width:100%!important;min-height:58px!important;padding:0 16px!important;border:1px solid transparent!important;border-radius:14px!important;
+    display:flex!important;align-items:center!important;gap:14px!important;background:transparent!important;color:#41464d!important;
+    font-size:16px!important;font-weight:700!important;line-height:1.2!important;box-shadow:none!important;opacity:1!important
+  }
+  header.top nav.tabs a::before{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:10px;background:#f0f3f2;color:#176b4e;font-size:17px;font-weight:800}
+  header.top nav.tabs a[href="#home"]::before{content:"⌂"}
+  header.top nav.tabs a[href="#dashboard"]::before{content:"▦"}
+  header.top nav.tabs a[href="#inspect"]::before{content:"◎"}
+  header.top nav.tabs a[href="#vendors"]::before{content:"◇"}
+  header.top nav.tabs a[href="#criteria"]::before{content:"≡"}
+  header.top nav.tabs a[href="#procure"]::before{content:"□"}
+  header.top nav.tabs a[href="#me"]::before{content:"●";font-size:11px}
+  header.top nav.tabs a[href="#admin"]::before{content:"✓"}
+  header.top nav.tabs a::after{display:none!important}
+  header.top nav.tabs a:hover{background:#f1f6f3!important;color:#176b4e!important;border-color:#e0ebe5!important}
+  header.top nav.tabs a[aria-current="page"]{background:#176b4e!important;color:#fff!important;border-color:#176b4e!important;box-shadow:0 10px 22px rgba(23,107,78,.16)!important}
+  header.top nav.tabs a[aria-current="page"]::before{background:rgba(255,255,255,.16)!important;color:#fff!important}
+  header.top #who{order:3!important;width:100%!important;margin:auto 0 0!important;padding:18px 10px 0!important;border-top:1px solid #e7e9e8!important;display:flex!important;flex-wrap:wrap!important;gap:8px!important;color:#555b63!important}
+  header.top #who[hidden]{display:none!important}
+  header.top #whoMail{width:100%!important;max-width:none!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px!important}
+  header.top #logoutBtn{min-height:38px!important;border-radius:10px!important;padding:6px 12px!important;color:#555b63!important;border-color:#dadddf!important}
+  header.top #themeBtn{order:4!important;width:100%!important;min-height:42px!important;margin-top:10px!important;border-radius:11px!important}
+  body>.guestbar{margin-left:272px!important}
+  body>.wrap{width:auto!important;max-width:none!important;margin-left:272px!important;margin-right:0!important;padding-left:36px!important;padding-right:36px!important}
+  body>.wrap main#app{max-width:1420px;margin:0 auto;padding-top:42px;padding-bottom:90px}
+}
+</style>
+
 <header class="top"><div class="wrap">
   <div class="brand"><div class="mark">비품</div><div>비품비서<small>효율적 OA사무비품 재산관리</small></div></div>
   <div id="who" hidden style="font-size:12px;opacity:.85;display:flex;gap:6px;align-items:center"><span id="whoMail"></span><button class="small ghost" id="logoutBtn" style="color:inherit;border-color:rgba(255,255,255,.3);padding:3px 8px">로그아웃</button></div>
