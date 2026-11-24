@@ -300,6 +300,7 @@ dialog::backdrop{background:rgba(12,12,11,.65);backdrop-filter:blur(3px)}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
+@layer base{
 /* Layout: 상단 탭바 + 단일 컬럼 작업영역. 현황 → 촬영·판정 → 업체 → 기준 */
 :root{
   --bg:#f3f4f1; --surface:#ffffff; --sunk:#e8eae4; --line:#d3d6cd;
@@ -674,6 +675,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
 .empty{padding:28px;text-align:center;color:var(--muted)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:6px;font-size:14px;z-index:20}
 @media (max-width:560px){.gradebar{grid-template-columns:repeat(2,1fr)} .shots{grid-template-columns:repeat(2,1fr)} nav.tabs{margin-left:0;width:100%} nav.tabs a{padding:6px 9px}}
+}
 </style>
 
 <header class="top"><div class="wrap">
