@@ -1131,6 +1131,43 @@ td{font-size:15px}
 }
 </style>
 
+<style id="design-v10-workspace-polish">
+/* Workspace surfaces tuned to the large left navigation. */
+@media(min-width:1050px){
+  body{background:#f3f5f4!important}
+  header.top nav.tabs{scrollbar-width:thin;scrollbar-color:#cdd5d1 transparent}
+  header.top nav.tabs a[href="#vendors"]{margin-top:8px}
+  header.top nav.tabs a[href="#me"]{margin-top:8px}
+  body>.wrap main#app{width:100%;display:block!important}
+  #app>[data-view]{max-width:1420px;margin:0 auto;padding-bottom:44px}
+  #app>[data-view]>h1,#app>[data-view]>.row:first-child h1{font-size:clamp(32px,3vw,42px)!important;line-height:1.2!important;letter-spacing:-.045em!important;color:#171b22!important}
+  #app>[data-view]>.row:first-child:has(h1){margin-bottom:22px;padding:26px 28px;border:1px solid #e0e4e2;border-radius:18px;background:#fff;align-items:center!important}
+  #app .panel{border-color:#e0e4e2!important;border-radius:18px!important;padding:clamp(24px,2.4vw,34px)!important;background:#fff!important;box-shadow:0 8px 28px rgba(22,28,32,.035)!important}
+  #app .notice{border-radius:12px!important;padding:15px 17px!important}
+  #app button,#app .btn{min-height:46px!important;border-radius:11px!important;padding-inline:18px!important}
+  #app button.primary,#app .btn.primary{background:#176b4e!important;border-color:#176b4e!important}
+  #app button.primary:hover,#app .btn.primary:hover{background:#12563f!important;border-color:#12563f!important}
+  #app input,#app select,#app textarea{min-height:48px!important;border-radius:11px!important;background:#fff!important}
+  #app .gradebar{gap:12px!important}
+  #app .gstat{border-radius:16px!important;padding:20px!important;background:#fff!important;border:1px solid #e0e4e2!important;border-top:3px solid currentColor!important}
+  #app .kpis{border:0!important;border-radius:14px!important;background:#f7f8f7!important;overflow:hidden}
+  #app .kpi{padding:22px!important}
+  #app .tablewrap{border:1px solid #e0e4e2!important;border-radius:14px!important;background:#fff!important;box-shadow:none!important}
+  #app table{font-size:15px!important}
+  #app th{padding:14px 13px!important;font-size:14px!important;background:#f2f4f3!important;color:#4a5057!important}
+  #app td{padding:14px 13px!important;font-size:15px!important}
+  #app .card,#app .tile,#app .cat,#app .vcard,#app .vendor,#app .gcol{border-radius:14px!important;border-color:#e0e4e2!important;overflow:hidden}
+  #app .chip,#app .pill,#app .tag{border-radius:9px!important}
+  #app dialog,#app .dlg{border-radius:18px!important}
+}
+
+@media(max-width:1049px){
+  header.top nav.tabs{scrollbar-width:none}
+  header.top nav.tabs::-webkit-scrollbar{display:none}
+  header.top nav.tabs a{min-height:48px!important;padding-inline:4px!important}
+}
+</style>
+
 <header class="top"><div class="wrap">
   <div class="brand"><div class="mark">비품</div><div>비품비서<small>효율적 OA사무비품 재산관리</small></div></div>
   <div id="who" hidden style="font-size:12px;opacity:.85;display:flex;gap:6px;align-items:center"><span id="whoMail"></span><button class="small ghost" id="logoutBtn" style="color:inherit;border-color:rgba(255,255,255,.3);padding:3px 8px">로그아웃</button></div>
