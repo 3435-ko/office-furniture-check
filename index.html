@@ -970,6 +970,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
       <div id="lpLogin" class="lp-eyebrow" style="color:var(--accent)">담당자 로그인</div>
       <h2>부대 담당자 계정으로 시작하세요</h2>
       <button type="button" class="gbtn" id="authGoogle"><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.8-2.1 5.1-4.4 6.7v5.5h7.1c4.2-3.8 6.6-9.5 6.6-16.2z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.5 46 24 46z"/><path fill="#FBBC05" d="M11.8 28.3c-.4-1.3-.7-2.8-.7-4.3s.3-3 .7-4.3V14H4.5C3 17 2.2 20.4 2.2 24s.8 7 2.3 10l7.3-5.7z"/><path fill="#EA4335" d="M24 10.7c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.2 29.9 2 24 2 15.5 2 8.1 6.9 4.5 14l7.3 5.7c1.7-5.2 6.5-9 12.2-9z"/></svg>Google 계정으로 로그인</button>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px"><input id="oauthPrivacyConsent" type="checkbox" style="width:auto;min-height:auto;margin-top:3px"><span><b>(필수)</b> Google 로그인에 필요한 이메일과 계정 식별자를 계정 인증·승인 목적으로 수집하여 회원 탈퇴 또는 삭제 요청 시까지 보관하는 데 동의합니다. 거부하면 Google 로그인을 사용할 수 있으며 이메일 로그인 또는 게스트 조회를 이용할 수 있습니다.</span></label>
       <div id="gsiBox" hidden style="display:flex;justify-content:center;min-height:44px"></div>
       <button type="button" class="gbtn qbtn" id="authQr"><svg viewBox="0 0 24 24" width="20" height="20" class="ic" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 20h2M20 14v2"/></svg>휴대폰으로 QR 찍어 이 PC 로그인</button>
       <div id="qrBox" hidden class="qrbox">
@@ -991,6 +992,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
         <label class="f">이름(계급 포함)<input id="suName" autocomplete="name" placeholder="예) 대위 홍길동"></label>
         <label class="f">소속 부대<input id="suUnit" list="unitList" placeholder="예) 제○○사단 군수처"></label>
         <label class="f">연락처 <span class="muted" style="font-size:12px">(아이디·비밀번호 찾을 때 씁니다)</span><input id="suPhone" type="tel" autocomplete="tel" placeholder="예) 010-0000-0000"></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px"><input id="signupPrivacyConsent" type="checkbox" style="width:auto;min-height:auto;margin-top:3px"><span><b>(필수)</b> 이메일·이름(계급 포함)·소속 부대·연락처를 계정 생성, 사용자 승인, 계정 찾기 목적으로 수집하여 회원 탈퇴 또는 삭제 요청 시까지 보관하는 데 동의합니다. 거부하면 가입할 수 없으며 게스트 조회는 가능합니다.</span></label>
       </div>
       <datalist id="unitList"></datalist>
       <div class="row"><button class="primary" type="submit">로그인</button><button type="button" class="ghost" id="authSignup">처음이면 가입</button></div>
@@ -1031,6 +1033,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
           <label class="f">이름(계급 포함)<input id="piName" placeholder="예) 대위 홍길동"></label>
           <label class="f">소속 부대<input id="piUnit" list="unitList" placeholder="예) 제○○사단 군수처"></label>
           <label class="f">연락처<input id="piPhone" type="tel" placeholder="예) 010-0000-0000"></label>
+          <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px"><input id="piPrivacyConsent" type="checkbox" style="width:auto;min-height:auto;margin-top:3px"><span><b>(필수)</b> 이름·소속 부대·연락처를 사용자 승인과 계정 찾기 목적으로 수집하여 회원 탈퇴 또는 삭제 요청 시까지 보관하는 데 동의합니다.</span></label>
           <div class="row"><button type="button" class="small primary" id="piSave">가입 정보 저장</button></div>
         </div><div class="row"><button type="button" class="small ghost" id="pendRe">다시 확인</button><button type="button" class="small ghost" id="pendOut">로그아웃</button></div></div>
     </form>
@@ -1858,7 +1861,7 @@ function ensureLogin(){
       $("pendInfo").hidden=!needInfo;
       if(needInfo){ $("pendText").textContent="Google 계정으로 가입하셨습니다. 이름과 소속 부대를 적어 저장하면 그 부대 부대관리자에게 승인 요청이 갑니다.";
         $("piName").value=pr.name||""; sbClient.rpc("list_units").then(({data})=>{ $("unitList").innerHTML=(data||[]).map(x=>`<option value="${esc(x)}">`).join(""); });
-        $("piSave").onclick=async()=>{ if(!$("piPhone").value.trim()){ toast("연락처도 입력하세요 (아이디·비밀번호 찾을 때 씁니다)"); return; } const {error}=await sbClient.rpc("set_my_info",{p_name:$("piName").value,p_unit:$("piUnit").value,p_phone:$("piPhone").value});
+        $("piSave").onclick=async()=>{ if(!$("piPhone").value.trim()){ toast("연락처도 입력하세요 (아이디·비밀번호 찾을 때 씁니다)"); return; } if(!$("piPrivacyConsent")?.checked){ toast("개인정보 수집·이용 필수 항목을 확인해 주세요."); return; } const {error}=await sbClient.rpc("set_my_info",{p_name:$("piName").value,p_unit:$("piUnit").value,p_phone:$("piPhone").value});
           if(error){ toast(error.message); return; } toast("저장했습니다. 부대관리자 승인을 기다리세요."); done(u); }; }
       if(SS.get("qrPending")) $("pendText").textContent+=" (승인 뒤에 PC 로그인 QR을 다시 찍으세요.)";
       setTimeout(()=>$("pendingBox").scrollIntoView({behavior:"smooth",block:"center"}),300);
@@ -1891,7 +1894,8 @@ function ensureLogin(){
       if(!email||password.length<6){ msg("이메일과 6자 이상 비밀번호를 입력하세요."); return; }
       let meta=null;
       if(mode==="up"){ meta={name:$("suName").value.trim(),unit:$("suUnit").value.trim(),phone:$("suPhone").value.trim()};
-        if(!meta.name||!meta.unit||!meta.phone){ msg("이름, 소속 부대, 연락처를 모두 입력하세요."); return; } }
+        if(!meta.name||!meta.unit||!meta.phone){ msg("이름, 소속 부대, 연락처를 모두 입력하세요."); return; }
+        if(!$("signupPrivacyConsent")?.checked){ msg("개인정보 수집·이용 필수 항목을 확인해 주세요."); return; } }
       msg(mode==="up"?"가입하는 중…":"로그인하는 중…");
       const r= mode==="up"? await sbClient.auth.signUp({email,password,options:{data:meta}}) : await sbClient.auth.signInWithPassword({email,password});
       if(r.error){ msg(mode==="up"?"가입하지 못했습니다: "+r.error.message:"이메일 또는 비밀번호가 맞지 않습니다."); return; }
@@ -1909,7 +1913,7 @@ function ensureLogin(){
       const raw=[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,"0")).join("");
       const hashed=[...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(raw)))].map(b=>b.toString(16).padStart(2,"0")).join("");
       google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,nonce:hashed,ux_mode:"popup",use_fedcm_for_prompt:true,
-        callback:async resp=>{ msg("Google 계정으로 들어가는 중…");
+        callback:async resp=>{ if(!$("oauthPrivacyConsent")?.checked){ msg("Google 로그인 전 개인정보 수집·이용 필수 항목을 확인해 주세요."); return; } msg("Google 계정으로 들어가는 중…");
           const {data,error}=await sbClient.auth.signInWithIdToken({provider:"google",token:resp.credential,nonce:raw});
           if(error){ msg("Google 로그인 실패: "+error.message); return; } msg(""); done(data.user); }});
       const w=Math.min(400,Math.max(220,$("authForm").clientWidth-48));
