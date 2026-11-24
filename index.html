@@ -691,7 +691,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
   </nav>
 </div></header>
 
-<div class="guestbar" role="status">게스트로 둘러보는 중입니다 · 화면 조회만 가능하며 사진 올리기·추가·수정·삭제·다운로드는 제한됩니다</div>
+<div class="guestbar" role="status">안전한 데모 모드 · 실제 운영 데이터와 연결되지 않은 예시 자료만 표시되며 사진 올리기·추가·수정·삭제·다운로드는 제한됩니다</div>
 <div class="wrap"><main id="app">
 
 <!-- 홈 (메인 인포그래픽) -->
@@ -983,7 +983,7 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
           <div class="row"><button type="button" class="small ghost" id="qrNew">새 QR</button><button type="button" class="small ghost" id="qrClose">닫기</button></div>
         </div>
       </div>
-      <button type="button" class="gbtn qbtn" id="authGuest" data-view-only>게스트로 둘러보기 <span class="muted" style="font-weight:400;font-size:12.5px">(조회만 가능)</span></button>
+      <button type="button" class="gbtn qbtn" id="authGuest" data-view-only>안전한 데모 둘러보기 <span class="muted" style="font-weight:400;font-size:12.5px">(예시 데이터 전용)</span></button>
       <div class="ordiv"><span>또는 이메일로</span></div>
       <label class="f">이메일<input id="authEmail" type="email" autocomplete="username" required></label>
       <label class="f">비밀번호<input id="authPw" type="password" autocomplete="current-password" minlength="6" required></label>
@@ -1771,16 +1771,16 @@ function renderHome(){
     <div class="hstat D"><span class="label">폐품 판정</span><span class="v">${scrap}점</span></div>`;
 }
 /* ---------- 배포판: Supabase 저장소 + 로그인 ---------- */
-let IS_GUEST=false; const GUEST_ERR={code:"permission_denied",message:"게스트는 조회만 할 수 있습니다"};
+let IS_GUEST=false; const GUEST_ERR={code:"permission_denied",message:"데모 모드에서는 조회만 할 수 있습니다"};
 function enterGuestMode(){
   IS_GUEST=true; document.body.classList.add("guest");
-  // 쓰기·업로드 동작을 막는 안전장치 (서버 권한에서도 막혀 있음)
+  // 데모 모드는 실제 운영 데이터와 연결하지 않고 쓰기·업로드 동작도 막는다
   const W=/(추가|삭제|저장|수정|올리기|바꾸기|등록|판정하기|분석|지정|해제|승인|반려|초기화|업로드|촬영)/;
   document.addEventListener("click",e=>{ const el=e.target.closest("button,label.btn,label.gph,.upbtn,.refbtn,a[data-write]"); if(!el||el.closest("#authGate,#who,#tabs,.chips,.cats,.filters select")) return;
     if(el.matches("[data-view-only]")) return;
-    if(el.querySelector('input[type=file]')||W.test(el.textContent||"")){ e.preventDefault(); e.stopPropagation(); toast("게스트는 화면 조회만 할 수 있습니다"); } },true);
-  document.addEventListener("change",e=>{ if(e.target.matches('input[type=file]')){ e.target.value=""; e.stopPropagation(); toast("게스트는 업로드할 수 없습니다"); } },true);
-  document.addEventListener("contextmenu",e=>{ if(e.target.closest("img,svg,.photo,.gph")){ e.preventDefault(); toast("게스트는 사진을 저장할 수 없습니다"); } },true);
+    if(el.querySelector('input[type=file]')||W.test(el.textContent||"")){ e.preventDefault(); e.stopPropagation(); toast("데모 모드에서는 예시 자료만 조회할 수 있습니다"); } },true);
+  document.addEventListener("change",e=>{ if(e.target.matches('input[type=file]')){ e.target.value=""; e.stopPropagation(); toast("데모 모드에서는 업로드할 수 없습니다"); } },true);
+  document.addEventListener("contextmenu",e=>{ if(e.target.closest("img,svg,.photo,.gph")){ e.preventDefault(); toast("데모 모드에서는 사진을 저장할 수 없습니다"); } },true);
   document.addEventListener("dragstart",e=>{ if(e.target.closest("img")) e.preventDefault(); },true);
   if(["#inspect","#admin","#me"].includes(location.hash)) location.hash="#home";
 }
@@ -1788,9 +1788,12 @@ const SupaDB=(()=>{
   const ls={}, cache={}, T="records";
   const snap=n=>({metadata:{fromCache:false},docs:(cache[n]||[]).map(r=>({id:r.id,data:()=>r.data}))});
   const emit=n=>(ls[n]||[]).forEach(cb=>cb(snap(n)));
-  async function load(n){ const {data,error}=await sbClient.from(T).select("id,data").eq("coll",n).order("created_at"); if(error) throw error; cache[n]=data||[]; emit(n); }
+  async function load(n){
+    if(IS_GUEST){ const safe=(typeof SEED!=="undefined" && Array.isArray(SEED[n]))?SEED[n]:[]; cache[n]=safe.map((d,k)=>({id:d.id||`demo-${n}-${k}`,data:{...d,example:true}})); emit(n); return; }
+    const {data,error}=await sbClient.from(T).select("id,data").eq("coll",n).order("created_at"); if(error) throw error; cache[n]=data||[]; emit(n);
+  }
   let rt=false;
-  function realtime(){ if(rt) return; rt=true;
+  function realtime(){ if(rt||IS_GUEST) return; rt=true;
     sbClient.channel("records-live").on("postgres_changes",{event:"*",schema:"public",table:T},p=>{ const n=p.new?.coll||p.old?.coll; if(n&&ls[n]) load(n).catch(()=>{}); else Object.keys(ls).forEach(k=>load(k).catch(()=>{})); }).subscribe(); }
   const fail=e=>({code:(e&&(e.code==="42501"||/permission|policy/i.test(e.message||"")))?"permission_denied":"unavailable",message:e?.message});
   return {
@@ -1849,7 +1852,7 @@ function ensureLogin(){
       resolve(u); qrApproveFlow(); };
     let qrT=null; const qrStop=()=>{ clearInterval(qrT); qrT=null; };
     const done=async u=>{
-      if(u.is_anonymous){ myProfile={name:"게스트",role:"guest",status:"approved"}; enterGuestMode(); enter(u); $("whoMail").textContent="게스트(조회 전용)"; $("logoutBtn").textContent="로그인하기"; return; }
+      if(u.is_anonymous){ myProfile={name:"데모",role:"guest",status:"approved"}; enterGuestMode(); enter(u); $("whoMail").textContent="안전한 데모 · 예시 데이터 전용"; $("logoutBtn").textContent="로그인하기"; return; }
       const {data:pr}=await sbClient.from("profiles").select("*").eq("id",u.id).maybeSingle();
       myProfile=pr||null;
       if(pr && pr.status==="approved"){ $("navAdmin").hidden=!(pr.role==="unit_admin"||pr.role==="super"); $("navMe").hidden=false; enter(u); return; }
@@ -1949,10 +1952,9 @@ function ensureLogin(){
     $("siteQr").innerHTML=qrSvg(location.origin+"/");
     $("siteQrPrint").onclick=()=>{ const w=window.open("","_blank"); if(!w) return;
       w.document.write(`<!doctype html><meta charset="utf-8"><title>접속 QR</title><body style="font-family:sans-serif;text-align:center;padding:40px"><h1 style="font-size:30px">비품비서<br><small style="font-size:18px">(효율적 OA사무비품 재산관리)</small></h1><div style="width:320px;margin:24px auto">${qrSvg(location.origin+"/",8)}</div><p style="font-size:20px">휴대폰 카메라로 찍으면 바로 열립니다</p><p style="color:#555">${location.origin}</p><script>setTimeout(()=>print(),300)<\/script></body>`); w.document.close(); };
-    $("authGuest").onclick=async()=>{ msg("게스트로 들어가는 중…");
-      const {data,error}=await sbClient.auth.signInAnonymously();
-      if(error){ msg(/disabled|not enabled/i.test(error.message)?"게스트 입장이 아직 켜져 있지 않습니다. 관리자에게 문의하세요.":"게스트로 들어가지 못했습니다: "+error.message); return; }
-      msg(""); done(data.user); };
+    $("authGuest").onclick=async()=>{ msg("안전한 데모를 준비하는 중…");
+      await sbClient.auth.signOut().catch(()=>{});
+      msg(""); done({id:"guest-demo",email:"",is_anonymous:true}); };
     $("authFindId").onclick=()=>{ $("findIdBox").hidden=!$("findIdBox").hidden; $("signupBox").hidden=true; $("pwBox").hidden=true; if(!$("findIdBox").hidden) $("fiName").focus(); };
     $("fiGo").onclick=async()=>{ const n=$("fiName").value.trim(), u=$("fiUnit").value.trim(), ph=$("fiPhone").value.trim();
       if(!n||!u||!ph){ $("fiOut").textContent="이름, 소속 부대, 연락처를 모두 입력하세요."; return; }
