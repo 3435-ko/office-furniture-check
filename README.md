@@ -30,8 +30,7 @@
 ├── index.html                 # 서비스 화면과 클라이언트 로직
 ├── api/
 │   └── analyze.js             # 사진 분석 서버 함수
-├── supabase/
-│   └── schema_and_seed.sql    # 데이터베이스 스키마 및 초기 데이터
+├── privacy.html              # 개인정보처리방침
 ├── package.json
 └── vercel.json
 ```
@@ -56,6 +55,8 @@ Vercel 프로젝트에서 다음 환경 변수를 설정합니다.
 ## 보안 참고
 
 Supabase의 공개 클라이언트 키는 브라우저에서 사용하는 값이므로 데이터 접근은 반드시 Row Level Security(RLS) 정책으로 제한해야 합니다. 서버 전용 API 키와 서비스 역할 키는 Vercel 환경 변수에서만 관리하세요.
+
+운영 전에는 실제 Supabase 프로젝트 리전, Vercel·Anthropic 데이터 보존 설정, 개인정보 보호 담당자의 직접 연락처를 `privacy.html`에 정확히 반영해야 합니다. 군사기밀·비공개 부대정보·얼굴·명찰·문서가 포함된 사진은 업로드하지 마세요.
 
 ## 라이선스
 
