@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   if (!profileResponse.ok) return res.status(403).json({ error: "not_granted" });
   const profiles = await profileResponse.json();
   const profile = profiles?.[0];
-  if (!profile || profile.status !== "approved" || !["user", "unit_admin", "super"].includes(profile.role))
+  if (!profile || profile.status !== "approved" || !["member", "unit_admin", "super"].includes(profile.role))
     return res.status(403).json({ error: "not_granted" });
 
   const { prompt, images } = req.body || {};
