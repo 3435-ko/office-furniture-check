@@ -678,7 +678,6 @@ dialog::backdrop{background:rgba(10,14,9,.55)}
 }
 </style>
 
-
 <style id="design-v3">
 /* Design v3 · operational command center */
 :root,:root[data-theme="light"]{
@@ -809,7 +808,6 @@ dialog{border-radius:22px}.dlg{padding:30px}
   .panel{border-radius:16px}.gradebar{grid-template-columns:1fr 1fr}.kpis{grid-template-columns:1fr 1fr}
 }
 </style>
-
 
 <style id="design-v4-corporate-luxury">
 /* Corporate luxury · Samsung/LG clarity × Shilla restraint */
@@ -967,15 +965,62 @@ th,.pill,.tag,.ptype,.eyebrow,.lp-eyebrow,.ordiv,.gstat .s,.cat span,
 .authbox,.authbox label,.authbox .muted{font-size:16px!important}
 .authbox input,.authbox button{font-size:16px!important}
 td{font-size:15px}
+
+/* Inline helper copy in the existing application used compact pixel sizes. */
 [style*="font-size:11px"],[style*="font-size:12px"]{font-size:14px!important;line-height:1.55}
 [style*="font-size:13px"]{font-size:15px!important;line-height:1.6}
 [style*="font-size:14px"]{font-size:16px!important;line-height:1.65}
+
+/* Keep compact identity marks and large display treatments optically balanced. */
 .brand .mark{font-size:12px!important;line-height:1!important}
 .lp-photo::before,.lp-title,.lp-h h2,.lp-grades b,.bigg{line-height:1.2}
+
 @media (max-width:720px){
   body{font-size:16px!important}
   .muted,.notice,.label,label.f,.card .bd,.tile .bd,.vendor,.lp-cap{font-size:15px!important}
   nav.tabs a,button,.btn,input,select,textarea,table{font-size:15px!important}
+}
+</style>
+
+<style id="design-v6-executive-premium">
+/* Executive visual system: quiet, editorial, and information-led. */
+.authgate,.authgate .lp{background:#f4f5f5!important;color:#131820!important}
+.lp-top{position:relative!important;background:#fff!important;border-bottom:1px solid #dfe1e4!important}
+.lp-row{min-height:88px!important;max-width:1440px!important;padding-inline:42px!important}
+.lp-top .lp-btn{min-width:112px!important;background:transparent!important;color:#15223a!important}
+.lp-top .lp-btn:hover{background:#15223a!important;color:#fff!important}
+.lp-photo{display:none!important}
+.executive-hero{padding:0 42px 96px;background:#f4f5f5}
+.eh-grid{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:minmax(430px,.82fr) minmax(620px,1.18fr);min-height:720px;background:#fff;border-bottom:1px solid #d8dade}
+.eh-copy{padding:96px 72px 70px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
+.eh-kicker{display:flex;align-items:center;gap:14px;color:#887048;font-size:14px;font-weight:700;letter-spacing:.16em}
+.eh-kicker::before{content:"";width:38px;height:1px;background:#a88c5d}
+.eh-copy h1{margin:30px 0 26px;font-family:var(--display);font-size:clamp(48px,5vw,76px);font-weight:600;line-height:1.16;letter-spacing:-.06em;color:#111827}
+.eh-copy h1 span{display:block;color:#90764d}
+.eh-copy p{max-width:550px;margin:0;color:#5f6670;font-size:18px;line-height:1.9;word-break:keep-all}
+.eh-actions{display:flex;gap:10px;margin-top:42px;flex-wrap:wrap}
+.eh-actions a{display:inline-flex;min-height:48px;padding:0 23px;align-items:center;justify-content:center;border:1px solid #15223a;text-decoration:none;font-size:15px;font-weight:700;color:#15223a}
+.eh-actions a:first-child{background:#15223a;color:#fff}.eh-actions a:hover{background:#a88c5d;border-color:#a88c5d;color:#fff}
+.eh-metrics{width:100%;display:grid;grid-template-columns:repeat(3,1fr);margin-top:66px;border-top:1px solid #d8dade}
+.eh-metrics div{padding:22px 12px 0 0}.eh-metrics b{display:block;font-size:24px;font-weight:650;color:#172238}.eh-metrics span{display:block;margin-top:3px;font-size:14px;color:#747982}
+.eh-visual{position:relative;min-width:0;overflow:hidden;background:#111a2b}
+.eh-visual img{width:100%;height:100%;min-height:720px;display:block;object-fit:cover;object-position:58% center;filter:saturate(.72) contrast(1.03)}
+.eh-visual::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(17,26,43,.08);pointer-events:none}
+.eh-caption{position:absolute;left:32px;right:32px;bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:19px 22px;background:rgba(13,22,37,.9);color:#fff;border-top:1px solid #b89d6d;backdrop-filter:blur(12px)}
+.eh-caption b{font-size:15px;letter-spacing:.02em}.eh-caption span{font-size:14px;color:#c7ccd4}
+.lp-hero{padding:110px 24px!important;background:#111a2b!important}
+.lp-hgrid{display:block!important;max-width:720px!important}.lp-copy{display:none!important}
+.authbox{margin:0 auto!important;padding:48px!important;border:0!important;border-top:2px solid #a88c5d!important;box-shadow:0 22px 70px rgba(0,0,0,.22)!important}
+.authbox h2{font-size:30px!important;margin-bottom:24px!important}
+.lp-sec{padding-top:112px!important}.lp-flow div,.lp-feat div,.lp-grades div{padding:38px 34px!important}
+#officeScene svg{border:1px solid #d8dade;background:#111a2b}
+#officeScene .co{transition:opacity .18s}#officeScene .co:hover{opacity:.82}
+
+@media(max-width:1100px){
+  .executive-hero{padding-inline:24px}.eh-grid{grid-template-columns:1fr}.eh-copy{padding:72px 50px}.eh-visual img{min-height:600px}.eh-metrics{margin-top:48px}
+}
+@media(max-width:720px){
+  .lp-row{padding-inline:18px!important}.executive-hero{padding:0 0 64px}.eh-grid{border:0}.eh-copy{padding:60px 24px 48px}.eh-copy h1{font-size:clamp(42px,13vw,58px)}.eh-copy p{font-size:17px}.eh-actions{width:100%}.eh-actions a{flex:1 1 150px}.eh-metrics{grid-template-columns:1fr 1fr}.eh-metrics div:last-child{grid-column:1/-1}.eh-visual img{min-height:500px;object-position:61% center}.eh-caption{left:16px;right:16px;bottom:16px;display:block}.eh-caption span{display:block;margin-top:3px}.lp-hero{padding:72px 16px!important}.authbox{padding:32px 24px!important}
 }
 </style>
 
@@ -1245,6 +1290,25 @@ td{font-size:15px}
  <div class="lp">
   <header class="lp-top"><div class="lp-w lp-row"><div class="brand"><div class="mark">비품</div><div>비품비서<small>효율적 OA사무비품 재산관리</small></div></div>
     <a class="lp-btn ghostw" href="#lpLogin" id="lpTopLogin">로그인</a></div></header>
+  <section class="executive-hero" aria-labelledby="executiveHeroTitle">
+    <div class="eh-grid">
+      <div class="eh-copy">
+        <div class="eh-kicker">OFFICE ASSET INTELLIGENCE</div>
+        <h1 id="executiveHeroTitle">비품을 보는 기준을<span>바꾸다.</span></h1>
+        <p>사진 촬영부터 상태 판정, 정비 연결과 폐품 관리까지. 부대 사무비품의 전 과정을 하나의 기준으로 정확하고 투명하게 관리합니다.</p>
+        <div class="eh-actions"><a href="#lpLogin">시스템 시작</a><a href="#premiumOverview">서비스 살펴보기</a></div>
+        <div class="eh-metrics" aria-label="서비스 핵심 지표">
+          <div><b>7</b><span>사무비품 관리 품목</span></div>
+          <div><b>A–D</b><span>표준 상태 판정</span></div>
+          <div><b>ONE</b><span>통합 관리 흐름</span></div>
+        </div>
+      </div>
+      <figure class="eh-visual">
+        <img src="/assets/office-furniture-soldiers-v2.svg" alt="실제 군인들이 사무실에서 책상, 의자, 서류함과 파티션을 점검하는 모습">
+        <figcaption class="eh-caption"><b>현장 중심 사무비품 관리</b><span>촬영 · 판정 · 정비 · 자산 현황</span></figcaption>
+      </figure>
+    </div>
+  </section>
   <section class="lp-photo" aria-label="사무실 업무 사진">
     <img id="lpHeroImg" alt="군수처 간부들이 사무실에서 업무하는 사진" hidden>
     <div id="lpHeroArt" class="lp-art"></div>
@@ -1342,7 +1406,7 @@ td{font-size:15px}
     </form>
   </div></section>
 
-  <section class="lp-w lp-sec"><div class="lp-h"><span class="lp-num">01</span><h2>이렇게 판정합니다</h2></div>
+  <section class="lp-w lp-sec" id="premiumOverview"><div class="lp-h"><span class="lp-num">01</span><h2>이렇게 판정합니다</h2></div>
     <div class="lp-flow">
       <div><i><svg viewBox="0 0 24 24" class="ic"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></i><b>촬영·업로드</b><span>정면·측면·후면·손상부위 4장</span></div>
       <div><i><svg viewBox="0 0 24 24" class="ic"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/><path d="M9 15l2-6 2 6M9.7 13h2.6M15 9v6"/></svg></i><b>AI 기준 대조</b><span>품목별 A~D 항목을 하나씩</span></div>
@@ -2053,6 +2117,7 @@ function officeSVG(){
   ${co(7,105,200,"책장","책장",-80,-50)}
   </svg>`;
 }
+
 /* 실제 군인과 실제 사무비품을 사용한 사진형 인포그래픽.
    기존 품목 콜아웃의 클릭 동작은 그대로 유지한다. */
 officeSVG=function(){
@@ -2066,16 +2131,17 @@ officeSVG=function(){
     ["책장","책장",690,170,755,120]
   ];
   const callouts=points.map(([label,cat,x,y,lx,ly],i)=>`<g class="co" tabindex="0" role="link" aria-label="${label} 현황 보기" data-c="${cat}">
-    <path d="M${x} ${y} L${lx} ${ly}" stroke="#d7bb83" stroke-width="2" fill="none"/>
-    <circle cx="${x}" cy="${y}" r="7" fill="#15223a" stroke="#e6c887" stroke-width="3"/>
-    <rect x="${lx-5}" y="${ly-19}" width="${60+label.length*15}" height="38" rx="2" fill="#ffffff" fill-opacity=".95" stroke="#d7bb83"/>
-    <circle cx="${lx+14}" cy="${ly}" r="13" fill="#15223a"/><text x="${lx+14}" y="${ly+5}" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">${i+1}</text>
-    <text x="${lx+36}" y="${ly+6}" font-size="16" font-weight="700" fill="#15223a" font-family="IBM Plex Sans KR,Noto Sans KR,sans-serif">${label}</text>
+    <circle cx="${x}" cy="${y}" r="16" fill="#101a2b" fill-opacity=".9" stroke="#d8bb82" stroke-width="2"/>
+    <text x="${x}" y="${y+5}" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">${i+1}</text>
+    <rect x="48" y="${338+i*38}" width="166" height="32" fill="#111a2b" fill-opacity=".86"/>
+    <text x="64" y="${359+i*38}" font-size="14" font-weight="600" fill="#f7f4ee" font-family="IBM Plex Sans KR,Noto Sans KR,sans-serif">${String(i+1).padStart(2,"0")}  ${label}</text>
   </g>`).join("");
   return `<svg viewBox="0 0 1200 675" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="실제 군인들이 실제 사무비품을 점검하는 사진형 인포그래픽">
     <defs><linearGradient id="photoShade" x1="0" x2="1"><stop offset="0" stop-color="#0d1728" stop-opacity=".22"/><stop offset=".36" stop-color="#0d1728" stop-opacity="0"/></linearGradient></defs>
-    <image href="/assets/office-furniture-soldiers-v1.svg" width="1200" height="675" preserveAspectRatio="xMidYMid slice"/>
+    <image href="/assets/office-furniture-soldiers-v2.svg" width="1200" height="675" preserveAspectRatio="xMidYMid slice"/>
     <rect width="1200" height="675" fill="url(#photoShade)" pointer-events="none"/>
+    <text x="48" y="302" font-size="13" letter-spacing="3" fill="#d8bb82" font-family="IBM Plex Sans KR,Noto Sans KR,sans-serif">ASSET INDEX</text>
+    <line x1="48" y1="318" x2="214" y2="318" stroke="#d8bb82" stroke-width="1"/>
     ${callouts}
   </svg>`;
 };
@@ -2137,7 +2203,7 @@ const SupaDB=(()=>{
 })();
 /* 메인 페이지 상단 사진: 로그인 전에도 보이는 공개 사진 (coll=public, key=hero) */
 /* 부대 사진을 올리기 전까지 쓰는 무료 사진 (Unsplash License) */
-const STOCK_HERO="/assets/office-furniture-soldiers-v1.svg";
+const STOCK_HERO="/assets/office-furniture-soldiers-v2.svg";
 function showStockHero(){ const im=$("lpHeroImg"); im.onerror=()=>{ im.hidden=true; $("lpHeroArt").hidden=false; $("lpCredit").hidden=true; };
   im.onload=()=>{ im.hidden=false; $("lpHeroArt").hidden=true; $("lpCredit").hidden=true; }; im.src=STOCK_HERO; }
 async function loadLandingPhoto(){
@@ -2529,3 +2595,4 @@ renderDashboard(); renderVendors(); renderHome(); renderProcure(); route();
 })();
 </script>
 </body></html>
+
