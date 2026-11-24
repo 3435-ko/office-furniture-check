@@ -3,6 +3,8 @@ const SUPABASE_URL = process.env.SUPABASE_URL || "https://ihcomdxdbfgagmwooait.s
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "sb_publishable_CeF1hU5lqic9so65PNeN3Q_oi5evrli";
 
 export default async function handler(req, res) {
+  res.setHeader("Cache-Control", "no-store, max-age=0");
+  res.setHeader("X-Content-Type-Options", "nosniff");
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return res.status(501).json({ error: "no_key" });
@@ -13,8 +15,11 @@ export default async function handler(req, res) {
   if (!u.ok) return res.status(401).json({ error: "unauthorized" });
 
   const { prompt, images } = req.body || {};
-  if (typeof prompt !== "string" || !Array.isArray(images) || !images.length || images.length > 4)
+  if (typeof prompt !== "string" || prompt.length > 12000 || !Array.isArray(images) || !images.length || images.length > 4)
     return res.status(400).json({ error: "bad_request" });
+  const totalImageChars = images.reduce((sum, image) => sum + (typeof image === "string" ? image.length : 0), 0);
+  if (images.some((image) => typeof image !== "string" || image.length > 6000000) || totalImageChars > 12000000)
+    return res.status(413).json({ error: "payload_too_large" });
 
   const content = [
     ...images.map((data) => ({ type: "image", source: { type: "base64", media_type: "image/jpeg", data } })),
@@ -23,10 +28,10 @@ export default async function handler(req, res) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5", max_tokens: 2000, messages: [{ role: "user", content }] }),
+    body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6", max_tokens: 2000, messages: [{ role: "user", content }] }),
   });
   if (r.status === 429) return res.status(429).json({ error: "rate_limited" });
-  if (!r.ok) return res.status(502).json({ error: "upstream", detail: (await r.text()).slice(0, 300) });
+  if (!r.ok) return res.status(502).json({ error: "upstream" });
   const out = await r.json();
   const text = (out.content || []).filter((c) => c.type === "text").map((c) => c.text).join("");
   const m = text.match(/\{[\s\S]*\}/);
