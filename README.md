@@ -45,8 +45,9 @@ Vercel 프로젝트에서 다음 환경 변수를 설정합니다.
 | `ANTHROPIC_MODEL` | 사용할 Anthropic 모델 | 선택 |
 | `SUPABASE_URL` | Supabase 프로젝트 URL | 권장 |
 | `SUPABASE_ANON_KEY` | Supabase 공개 클라이언트 키 | 권장 |
+| `SUPABASE_SECRET_KEY` | QR 로그인용 Supabase 서버 비밀키 | QR 로그인 사용 시 필수 |
 
-`ANTHROPIC_API_KEY` 같은 비밀값은 소스 코드나 커밋에 포함하지 마세요. 키가 설정되지 않으면 사진 분석 API는 `501 no_key`를 반환하고, 화면은 예시 결과로 동작합니다.
+`ANTHROPIC_API_KEY`, `SUPABASE_SECRET_KEY` 같은 비밀값은 소스 코드나 커밋에 포함하지 마세요. AI 키가 설정되지 않으면 사진 분석 API는 `501 no_key`를 반환하고 화면은 예시 결과로 동작합니다. Supabase 서버 비밀키가 없으면 QR 로그인 API는 `501 no_key`를 반환합니다.
 
 ## 배포
 
