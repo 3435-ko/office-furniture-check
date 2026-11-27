@@ -1099,7 +1099,7 @@ td{font-size:15px}
   header.top .brand small{display:block!important;font-size:14px!important;color:#777d83!important;margin-top:3px!important}
   header.top nav.tabs{
     order:2!important;width:100%!important;margin:22px 0 0!important;padding:0!important;display:flex!important;flex:1 1 auto!important;
-    flex-direction:column!important;align-items:stretch!important;gap:7px!important;overflow-y:auto!important;overflow-x:hidden!important
+    flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;gap:7px!important;overflow-y:auto!important;overflow-x:hidden!important
   }
   header.top nav.tabs::before{content:"업무 메뉴";padding:0 13px 7px;color:#8a8f95;font-size:14px;font-weight:700;letter-spacing:.04em}
   header.top nav.tabs a{
@@ -1120,6 +1120,7 @@ td{font-size:15px}
   header.top nav.tabs a:hover{background:#f1f6f3!important;color:#176b4e!important;border-color:#e0ebe5!important}
   header.top nav.tabs a[aria-current="page"]{background:#176b4e!important;color:#fff!important;border-color:#176b4e!important;box-shadow:0 10px 22px rgba(23,107,78,.16)!important}
   header.top nav.tabs a[aria-current="page"]::before{background:rgba(255,255,255,.16)!important;color:#fff!important}
+  header.top nav.tabs a[hidden]{display:none!important}
   header.top #who{order:3!important;width:100%!important;margin:auto 0 0!important;padding:18px 10px 0!important;border-top:1px solid #e7e9e8!important;display:flex!important;flex-wrap:wrap!important;gap:8px!important;color:#555b63!important}
   header.top #who[hidden]{display:none!important}
   header.top #whoMail{width:100%!important;max-width:none!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px!important}
@@ -1162,16 +1163,38 @@ td{font-size:15px}
 }
 
 @media(max-width:1049px){
-  header.top nav.tabs{scrollbar-width:none}
-  header.top nav.tabs::-webkit-scrollbar{display:none}
-  header.top nav.tabs a{min-height:48px!important;padding-inline:4px!important}
+  header.top .wrap{gap:8px 14px!important;padding:10px 16px 12px!important}
+  header.top nav.tabs{
+    display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px!important;
+    flex:0 0 100%;width:100%!important;margin:0!important
+  }
+  header.top nav.tabs a{
+    display:grid;place-items:center;min-height:44px;width:100%!important;
+    padding:6px 3px!important;border:1px solid transparent;border-radius:8px!important;
+    font-size:clamp(12px,3.4vw,15px)!important;line-height:1.25;text-align:center;white-space:normal
+  }
+  header.top nav.tabs a:hover{background:#f1f6f3!important;color:#176b4e!important}
+  header.top nav.tabs a[aria-current="page"]{
+    background:#e8f3ed!important;color:#12563f!important;border-color:#c5dfd1
+  }
+  header.top nav.tabs a[aria-current="page"]::after{display:none!important}
+  header.top nav.tabs a:focus-visible{outline-offset:-2px}
+}
+@media(min-width:721px) and (max-width:1049px){
+  header.top nav.tabs{grid-template-columns:repeat(8,minmax(0,1fr))}
+}
+@media(max-width:720px){
+  header.top .wrap{flex-wrap:wrap!important}
+  .eh-grid{min-height:0!important}
+  .eh-visual{min-height:clamp(300px,97vw,530px)!important}
+  .eh-photo-stack{inset:16px 12px 28px}
 }
 </style>
 
 <header class="top"><div class="wrap">
   <div class="brand"><div class="mark">비품</div><div>비품비서<small>효율적 OA사무비품 재산관리</small></div></div>
   <div id="who" hidden style="font-size:12px;opacity:.85;display:flex;gap:6px;align-items:center"><span id="whoMail"></span><button class="small ghost" id="logoutBtn" style="color:inherit;border-color:rgba(255,255,255,.3);padding:3px 8px">로그아웃</button></div>
-  <nav class="tabs" id="tabs">
+  <nav class="tabs" id="tabs" aria-label="업무 메뉴">
     <a href="#home">홈</a>
     <a href="#dashboard">현황</a>
     <a href="#inspect">촬영·판정</a>
@@ -1722,7 +1745,6 @@ const VIEWS=["home","dashboard","inspect","vendors","criteria","procure","me","a
 function route(){
   const h=(location.hash||"#home").slice(1); const v=VIEWS.includes(h)?h:"home";
   document.querySelectorAll("[data-view]").forEach(s=>s.hidden = s.id!=="v-"+v);
-  document.querySelectorAll("#tabs a").forEach(a=>a.toggleAttribute("aria-current",a.getAttribute("href")==="#"+v) || a.removeAttribute("aria-current"));
   document.querySelectorAll("#tabs a").forEach(a=>{ if(a.getAttribute("href")==="#"+v) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
   window.scrollTo(0,0);
 }
